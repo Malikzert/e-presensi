@@ -1,22 +1,41 @@
-<section class="space-y-6">
-    <header class="border-l-4 border-red-500 pl-4">
-        <h2 class="text-lg font-bold text-red-800 uppercase tracking-wide">
-            {{ __('Penghapusan Akun Pegawai') }}
-        </h2>
-
-        <p class="mt-1 text-sm text-gray-600 italic">
-            {{ __('Setelah akun dihapus, seluruh riwayat presensi dan data medis Anda akan terhapus permanen. Proses ini memerlukan verifikasi ganda dan persetujuan dari bagian SDM/IT.') }}
-        </p>
+<section x-data="{ expanded: false }" class="space-y-6">
+    <header 
+        @click="expanded = !expanded" 
+        class="border-l-4 border-red-500 pl-4 cursor-pointer flex justify-between items-center group transition-all duration-300"
+    >
+        <div>
+            <h2 class="text-lg font-bold text-red-800 uppercase tracking-wide group-hover:text-red-600">
+                {{ __('Penghapusan Akun Pegawai') }}
+            </h2>
+            <p class="mt-1 text-sm text-gray-600 italic">
+                {{ __('Kelola permintaan penghapusan akses sistem Anda.') }}
+            </p>
+        </div>
+        <svg 
+            class="w-6 h-6 text-red-500 transition-transform duration-300" 
+            :class="expanded ? 'rotate-180' : ''" 
+            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
     </header>
 
-    <x-danger-button
-        x-data=""
-        class="bg-red-600 hover:bg-red-700 shadow-md"
-        x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
-    >
-        <svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-        {{ __('Hapus Akun Pegawai') }}
-    </x-danger-button>
+    <div x-show="expanded" x-collapse x-cloak class="pt-2">
+        <div class="bg-red-50/50 p-4 rounded-xl border border-red-100">
+            <p class="text-sm text-gray-600 mb-4">
+                {{ __('Setelah akun dihapus, seluruh riwayat presensi dan data medis Anda akan terhapus permanen. Proses ini memerlukan verifikasi ganda dan persetujuan dari bagian SDM/IT.') }}
+            </p>
+
+            <x-danger-button
+                x-data=""
+                class="bg-red-600 hover:bg-red-700 shadow-md"
+                x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')"
+            >
+                <svg class="w-4 h-4 me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                {{ __('Hapus Akun Pegawai') }}
+            </x-danger-button>
+        </div>
+    </div>
 
     <x-modal name="confirm-user-deletion" :show="$errors->userDeletion->isNotEmpty()" focusable>
         <form method="post" action="{{ route('profile.destroy') }}" class="p-6 bg-white" x-data="{ confirmationText: '' }">
@@ -67,7 +86,7 @@
                 </div>
                 <div>
                     <h4 class="text-sm font-bold text-amber-800">3. Status: Menunggu Persetujuan</h4>
-                    <p class="text-xs text-amber-700">Setelah menekan tombol hapus, akun akan dinonaktifkan sementara dan menunggu validasi akhir dari Admin SDM RSU Anna Medika sebelum benar-benar dihapus dari database.</p>
+                    <p class="text-xs text-amber-700">Akun akan dinonaktifkan sementara dan menunggu validasi Admin SDM.</p>
                 </div>
             </div>
 

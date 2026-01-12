@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -25,6 +26,22 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+
+        // --- CEK STATUS AKUN (LOGIKA BARU) ---
+        $user = Auth::user();
+        
+        if ($user->status === 'pending_delete') {
+            // Jika akun dalam proses hapus, paksa keluar
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            // Lempar error kembali ke halaman login
+            throw ValidationException::withMessages([
+                'email' => __('Akun Anda sedang dalam proses peninjauan penghapusan oleh HRD. Akses ditangguhkan.'),
+            ]);
+        }
+        // -------------------------------------
 
         $request->session()->regenerate();
 

@@ -3,11 +3,17 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\AdminController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\GoogleController;
+
 
 // Halaman Depan
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Route untuk Google Auth
+Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
+Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
 // Dashboard - Menggunakan Middleware Auth & Verified
 Route::get('/dashboard', function () {
@@ -18,7 +24,8 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
     
     // Profile Management
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    // Contoh: User harus konfirmasi password dulu sebelum bisa buka halaman Edit Profil
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 

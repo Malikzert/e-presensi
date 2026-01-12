@@ -17,7 +17,11 @@
 
                 <form method="POST" action="{{ route('register') }}">
                     @csrf
-
+                    <div class="mt-4">
+                        <x-input-label for="nik" :value="__('NIK (Nomor Induk Karyawan)')" />
+                        <x-text-input id="nik" class="block mt-1 w-full bg-white/90 border-gray-200 rounded-xl shadow-sm focus:ring-green-500" type="text" name="nik" :value="old('nik')" required placeholder="Contoh: 327501..." />
+                        <x-input-error :messages="$errors->get('nik')" class="mt-2" />
+                    </div>
                     <div>
                         <x-input-label for="name" :value="__('Nama Lengkap')" />
                         <x-text-input id="name" class="block mt-1 w-full bg-white/90 border-gray-200 rounded-xl shadow-sm focus:ring-green-500" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" placeholder="Masukkan nama lengkap" />

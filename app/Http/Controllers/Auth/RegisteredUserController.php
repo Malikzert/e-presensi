@@ -31,6 +31,7 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'nik' => ['required', 'string', 'max:20', 'unique:users,nik'], // Validasi NIK wajib & unik
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
@@ -38,12 +39,18 @@ class RegisteredUserController extends Controller
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'nik' => $request->nik,
             'password' => Hash::make($request->password),
+            'jabatan' => 'Default', // Default jabatan
+            'departemen_id' => 1,    // Default departemen
+            'shift_id' => 1,         // Default shift (bisa diubah nanti saat absen)
+            'is_admin' => 0,
         ]);
 
         event(new Registered($user));
 
-        Auth::login($user);
+        // Langsung aktifkan Remember Me 1 Bulan
+        Auth::login($user, true);
 
         return redirect(route('dashboard', absolute: false));
     }

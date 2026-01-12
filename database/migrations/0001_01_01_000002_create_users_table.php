@@ -16,7 +16,14 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
+            $table->string('foto')->nullable()->default('default.jpg');
             $table->string('password');
+            $table->foreignId('departemen_id')->nullable()->constrained('departemens')->onDelete('set null');
+            $table->string('nik')->unique()->nullable();
+            $table->string('jabatan')->nullable();
+            $table->boolean('is_admin')->default(false);
+            $table->string('status')->default('active'); // active, pending_delete, inactive
+            $table->timestamp('delete_requested_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

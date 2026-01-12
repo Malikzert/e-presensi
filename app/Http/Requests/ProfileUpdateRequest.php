@@ -25,6 +25,25 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+            // Tambahkan validasi foto di sini
+            'foto' => [
+                'nullable', 
+                'image', 
+                'mimes:jpeg,png,jpg', 
+                'max:2048' // Maksimal 2MB
+            ],
+        ];
+    }
+
+    /**
+     * Custom pesan error (Opsional, agar lebih ramah user)
+     */
+    public function messages(): array
+    {
+        return [
+            'foto.image' => 'File harus berupa gambar.',
+            'foto.mimes' => 'Format gambar yang diperbolehkan hanya JPEG, PNG, dan JPG.',
+            'foto.max' => 'Ukuran gambar maksimal adalah 2MB.',
         ];
     }
 }

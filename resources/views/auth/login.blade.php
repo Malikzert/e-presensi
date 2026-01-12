@@ -45,7 +45,7 @@
                             <span class="ms-2 text-sm text-gray-600">{{ __('Biarkan saya tetap masuk') }}</span>
                         </label>
                         <div x-show="checked" x-transition class="mt-1 text-[10px] text-green-600 font-medium italic ms-6">
-                            Tetap login selama 14 hari
+                            Tetap login selama 1 Bulan
                         </div>
                     </div>
 
