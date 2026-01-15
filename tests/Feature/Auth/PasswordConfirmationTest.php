@@ -11,10 +11,12 @@ test('confirm password screen can be rendered', function () {
 });
 
 test('password can be confirmed', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'password' => bcrypt('New-password123'), // Paksa password kuat
+    ]);
 
     $response = $this->actingAs($user)->post('/confirm-password', [
-        'password' => 'password',
+        'password' => 'New-password123',
     ]);
 
     $response->assertRedirect();
