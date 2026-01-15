@@ -9,11 +9,14 @@ test('login screen can be rendered', function () {
 });
 
 test('users can authenticate using the login screen', function () {
-    $user = User::factory()->create();
+    // Kita buat user dengan password yang spesifik memenuhi aturan (Huruf Besar + Angka)
+    $user = User::factory()->create([
+        'password' => bcrypt('New-password123')
+    ]);
 
     $response = $this->post('/login', [
         'email' => $user->email,
-        'password' => 'password',
+        'password' => 'New-password123', // Sesuaikan dengan password kuat
     ]);
 
     $this->assertAuthenticated();
@@ -21,7 +24,9 @@ test('users can authenticate using the login screen', function () {
 });
 
 test('users can not authenticate with invalid password', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create([
+        'password' => bcrypt('New-password123')
+    ]);
 
     $this->post('/login', [
         'email' => $user->email,

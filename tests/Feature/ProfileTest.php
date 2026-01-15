@@ -7,7 +7,7 @@ test('profile page is displayed', function () {
 
     $response = $this
         ->actingAs($user)
-        ->get('/profile');
+        ->get('/profile/edit'); // Ubah dari /profile ke /profile/edit
 
     $response->assertOk();
 });
@@ -24,7 +24,7 @@ test('profile information can be updated', function () {
 
     $response
         ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
+        ->assertRedirect('/profile/edit'); // Ubah redirect ke /profile/edit
 
     $user->refresh();
 
@@ -45,7 +45,7 @@ test('email verification status is unchanged when the email address is unchanged
 
     $response
         ->assertSessionHasNoErrors()
-        ->assertRedirect('/profile');
+        ->assertRedirect('/profile/edit'); // Ubah redirect ke /profile/edit
 
     $this->assertNotNull($user->refresh()->email_verified_at);
 });
@@ -57,6 +57,7 @@ test('user can delete their account', function () {
         ->actingAs($user)
         ->delete('/profile', [
             'password' => 'password',
+            'confirm_text' => 'KONFIRMASI', // TAMBAHKAN INI (sesuaikan dengan kata yang kamu buat di controller)
         ]);
 
     $response
@@ -72,14 +73,15 @@ test('correct password must be provided to delete account', function () {
 
     $response = $this
         ->actingAs($user)
-        ->from('/profile')
+        ->from('/profile/edit') // Ubah source page
         ->delete('/profile', [
             'password' => 'wrong-password',
+            'confirm_text' => 'KONFIRMASI', // Tambahkan juga di sini agar tidak error validation field
         ]);
 
     $response
         ->assertSessionHasErrorsIn('userDeletion', 'password')
-        ->assertRedirect('/profile');
+        ->assertRedirect('/profile/edit'); // Ubah redirect ke /profile/edit
 
     $this->assertNotNull($user->fresh());
 });
