@@ -52,6 +52,6 @@ class RegisteredUserController extends Controller
         // Langsung aktifkan Remember Me 1 Bulan
         Auth::login($user, true);
 
-        return redirect(route('dashboard', absolute: false));
+        return redirect()->route('verification.notice');
     }
 }

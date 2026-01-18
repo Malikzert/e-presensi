@@ -1,9 +1,13 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\AdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\KaryawanController;
+use App\Http\Controllers\Admin\KehadiranController;
+use App\Http\Controllers\Admin\PengajuanController;
+use App\Http\Controllers\AdminProfileController;
 
 
 // Halaman Depan
@@ -15,10 +19,9 @@ Route::get('/', function () {
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
-// Dashboard - Menggunakan Middleware Auth & Verified
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth'])->name('dashboard');
 
 // Grup Route yang Memerlukan Login (Auth)
 Route::middleware('auth')->group(function () {
@@ -49,19 +52,27 @@ Route::middleware('auth')->group(function () {
         return view('pengaturan');
     })->name('pengaturan');
 });
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     
-    // URL: /admin/dashboards
-    Route::get('/dashboards', [AdminController::class, 'dashboards'])->name('admin.dashboards');
+    // Dashboard
+    Route::get('/dashboards', [DashboardController::class, 'index'])->name('dashboards');
+    Route::get('/export-kehadiran', [DashboardController::class, 'exportExcel'])->name('export.kehadiran');
+
+    // Karyawan
+    Route::get('/karyawans', [KaryawanController::class, 'index'])->name('karyawans');
+    Route::post('/karyawans', [KaryawanController::class, 'store'])->name('karyawans.store');
+    Route::put('/karyawans/{user}', [KaryawanController::class, 'update'])->name('karyawans.update'); 
+    Route::delete('/karyawans/{user}', [KaryawanController::class, 'destroy'])->name('karyawans.destroy');
+
+    // Kehadiran
+    Route::get('/kehadirans', [KehadiranController::class, 'index'])->name('kehadirans');
+
+    // Pengajuan (PASTIKAN BAGIAN INI ADA)
+    Route::get('/pengajuans', [PengajuanController::class, 'index'])->name('pengajuans');
+    Route::patch('/pengajuans/{id}/status', [PengajuanController::class, 'updateStatus'])->name('pengajuans.status');
     
-    // URL: /admin/kehadirans
-    Route::get('/kehadirans', [AdminController::class, 'kehadirans'])->name('admin.kehadirans');
-    
-    // URL: /admin/pengajuans
-    Route::get('/pengajuans', [AdminController::class, 'pengajuans'])->name('admin.pengajuans');
-    
-    // URL: /admin/karyawans
-    Route::get('/karyawans', [AdminController::class, 'karyawans'])->name('admin.karyawans');
+    Route::get('/profile', [AdminProfileController::class, 'index'])->name('profile.index');
+    Route::put('/profile/update', [AdminProfileController::class, 'update'])->name('profile.update');
 
 });
 require __DIR__.'/auth.php';
