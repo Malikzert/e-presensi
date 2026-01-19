@@ -18,7 +18,16 @@ class Pengajuan extends Model
         'tgl_mulai',
         'tgl_selesai',
         'alasan',
+        'bukti',
         'status',
+    ];
+
+    /**
+     * Otomatis mengubah string tanggal menjadi objek Carbon
+     */
+    protected $casts = [
+        'tgl_mulai' => 'date',
+        'tgl_selesai' => 'date',
     ];
 
     /**

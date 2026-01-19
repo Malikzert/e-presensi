@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
         return view('pengaturan');
     })->name('pengaturan');
 });
+
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     
     // Dashboard
@@ -66,13 +67,24 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     // Kehadiran
     Route::get('/kehadirans', [KehadiranController::class, 'index'])->name('kehadirans');
+    Route::post('/kehadirans', [KehadiranController::class, 'store'])->name('kehadirans.store');
+    Route::put('/kehadirans/{id}', [KehadiranController::class, 'update'])->name('kehadirans.update');
+    Route::delete('/kehadirans/{id}', [KehadiranController::class, 'destroy'])->name('kehadirans.destroy');
 
-    // Pengajuan (PASTIKAN BAGIAN INI ADA)
+    // Pengajuan
     Route::get('/pengajuans', [PengajuanController::class, 'index'])->name('pengajuans');
+    Route::post('/pengajuans', [PengajuanController::class, 'store'])->name('pengajuans.store');
+    Route::put('/pengajuans/{id}', [PengajuanController::class, 'update'])->name('pengajuans.update');
     Route::patch('/pengajuans/{id}/status', [PengajuanController::class, 'updateStatus'])->name('pengajuans.status');
+    Route::delete('/pengajuans/{id}', [PengajuanController::class, 'destroy'])->name('pengajuans.destroy');
     
+    // Export Pengajuan (Disesuaikan agar konsisten dengan prefix admin)
+    Route::get('/pengajuans/export', [PengajuanController::class, 'export'])->name('pengajuans.export');
+    
+    // Profile Admin
     Route::get('/profile', [AdminProfileController::class, 'index'])->name('profile.index');
     Route::put('/profile/update', [AdminProfileController::class, 'update'])->name('profile.update');
 
 });
+
 require __DIR__.'/auth.php';

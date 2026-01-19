@@ -24,27 +24,53 @@
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 @php
-                    // MENGHUBUNGKAN KE DATA BACKEND
+                    // Pastikan variabel dari Controller ($totalKaryawan, $hadirHariIni, dll) sudah benar
                     $statsData = [
-                        ['label' => 'Total Karyawan', 'value' => $totalKaryawan, 'color' => 'emerald', 'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z'],
-                        ['label' => 'Hadir Hari Ini', 'value' => $hadirHariIni, 'color' => 'blue', 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
-                        ['label' => 'Pending Izin', 'value' => $pendingIzin, 'color' => 'orange', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
-                        ['label' => 'Terlambat', 'value' => $terlambat, 'color' => 'rose', 'icon' => 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z']
+                        [
+                            'label' => 'Total Karyawan',
+                            'value' => $totalKaryawan,
+                            'color' => 'emerald',
+                            'icon' => 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+                            'progress' => 100
+                        ],
+                        [
+                            'label' => 'Hadir Hari Ini',
+                            'value' => $hadirHariIni,
+                            'color' => 'blue',
+                            'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+                            'progress' => $totalKaryawan > 0 ? ($hadirHariIni / $totalKaryawan) * 100 : 0
+                        ],
+                        [
+                        'label' => 'Terlambat',
+                        'value' => $terlambat,
+                        'color' => 'amber', // Warna Kuning/Oranye cerah
+                        'icon' => 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
+                        'progress' => $hadirHariIni > 0 ? ($terlambat / $hadirHariIni) * 100 : 0
+                        ],
+                        [
+                        'label' => 'Pengajuan Pending',
+                        'value' => $pendingIzin,
+                        'color' => 'rose', // Warna Merah (Rose) agar terlihat urgent
+                        'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
+                        'progress' => $totalKaryawan > 0 ? min(($pendingIzin / $totalKaryawan) * 100, 100) : 0
+                        ]
                     ];
                 @endphp
 
                 @foreach($statsData as $stat)
-                <div class="bg-white/80 backdrop-blur-md p-6 rounded-[30px] border border-emerald-100 shadow-xl shadow-emerald-900/5 hover:scale-105 transition-all group">
-                    <div class="flex justify-between items-start mb-4">
-                        <p class="text-gray-500 text-[10px] font-black uppercase tracking-widest">{{ $stat['label'] }}</p>
-                        <svg class="w-5 h-5 text-{{ $stat['color'] }}-500 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $stat['icon'] }}"></path></svg>
+                    <div class="bg-white/80 backdrop-blur-md p-6 rounded-[30px] border border-emerald-100 shadow-xl shadow-emerald-900/5 hover:scale-105 transition-all group">
+                        <div class="flex justify-between items-start mb-4">
+                            <p class="text-gray-500 text-[10px] font-black uppercase tracking-widest">{{ $stat['label'] }}</p>
+                            <svg class="w-5 h-5 text-{{ $stat['color'] }}-500 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $stat['icon'] }}"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-3xl font-black text-emerald-900">{{ number_format($stat['value'], 0, ',', '.') }}</h3>
+                        
+                        <div class="w-full bg-gray-100 h-1.5 mt-4 rounded-full overflow-hidden">
+                            <div class="bg-{{ $stat['color'] }}-500 h-full transition-all duration-1000" style="width: {{ $stat['progress'] }}%"></div>
+                        </div>
                     </div>
-                    <h3 class="text-3xl font-black text-emerald-900">{{ number_format($stat['value'], 0, ',', '.') }}</h3>
-                    
-                    <div class="w-full bg-gray-100 h-1.5 mt-4 rounded-full overflow-hidden">
-                        <div class="bg-{{ $stat['color'] }}-500 h-full transition-all duration-1000" style="width: {{ $totalKaryawan > 0 ? ($stat['value'] / $totalKaryawan) * 100 : 0 }}%"></div>
-                    </div>
-                </div>
                 @endforeach
             </div>
 

@@ -4,13 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Kehadiran extends Model
 {
     use HasFactory;
 
-    // Nama tabel secara manual karena kita tidak menggunakan jamak bahasa Inggris
     protected $table = 'kehadirans';
 
     protected $fillable = [
@@ -23,14 +21,12 @@ class Kehadiran extends Model
         'lokasi_pulang',
         'ip_address_masuk',
         'ip_address_pulang',
-        'status',
+        'status'
     ];
 
-    /**
-     * Relasi ke User (Karyawan)
-     */
-    public function user(): BelongsTo
+    // Relasi ke User
+    public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

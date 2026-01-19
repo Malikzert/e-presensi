@@ -20,13 +20,13 @@ class DashboardController extends Controller
         
         // Sesuaikan pemanggilan model menjadi Kehadiran
         $hadirHariIni = Kehadiran::whereDate('tanggal', $today)
-                        ->whereIn('status', ['hadir', 'terlambat'])
+                        ->whereIn('status', ['hadir', 'Hadir (Terlambat)'])
                         ->count();
 
         $pendingIzin = Pengajuan::where('status', 'pending')->count();
 
         $terlambat = Kehadiran::whereDate('tanggal', $today)
-                        ->where('status', 'terlambat')
+                        ->where('status', 'Hadir (Terlambat)')
                         ->count();
 
         $latestActivities = Kehadiran::with('user')
