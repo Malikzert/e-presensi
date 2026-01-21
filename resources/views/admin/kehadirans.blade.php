@@ -26,8 +26,8 @@
         editMarker: null,
         userLat: '', 
         userLng: '',
-        rsLat: -7.0344204, // Hasil konversi  -7.049500
-        rsLng: 112.7432508, // Hasil konversi 112°43'47.3 E
+        rsLat: -7.1251369, // Hasil konversi  -7.049500
+        rsLng: 112.7250561, // Hasil konversi 112°43'47.3 E
         maxRadius: 100, 
         isOutOfRange: true,
 
@@ -151,6 +151,7 @@
                                     <img src="{{ $item->user->foto ? asset('images/users/'.$item->user->foto) : asset('images/users/default.jpg') }}" class="w-8 h-8 rounded-full object-cover border-2 border-emerald-100">
                                     <div>
                                         <div class="font-bold text-gray-800">{{ $item->user->name ?? 'User Dihapus' }}</div>
+                                        <div class="text-[9px] text-emerald-600 font-bold uppercase tracking-tight">ID: {{ $item->user->nopeg ?? '-' }}</div>
                                         <div class="text-[10px] text-gray-400 font-medium">{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</div>
                                     </div>
                                 </div>

@@ -25,7 +25,12 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
-            // Tambahkan validasi foto di sini
+            // Tambahkan validasi Gender
+            'gender' => [
+                'required', 
+                Rule::in(['Laki-laki', 'Perempuan'])
+            ],
+            // Validasi foto
             'foto' => [
                 'nullable', 
                 'image', 
@@ -41,6 +46,8 @@ class ProfileUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'gender.required' => 'Jenis kelamin wajib dipilih.',
+            'gender.in' => 'Pilihan jenis kelamin tidak valid.',
             'foto.image' => 'File harus berupa gambar.',
             'foto.mimes' => 'Format gambar yang diperbolehkan hanya JPEG, PNG, dan JPG.',
             'foto.max' => 'Ukuran gambar maksimal adalah 2MB.',

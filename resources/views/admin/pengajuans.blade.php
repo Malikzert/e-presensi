@@ -49,7 +49,8 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                         </button>
-    </form>
+                    </form>
+                    
                     {{-- Tombol Tambah --}}
                     <button @click="showTambahModal = true" class="px-5 py-2.5 bg-emerald-600 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"></path></svg>
@@ -57,7 +58,7 @@
                     </button>
 
                     <form action="{{ route('admin.pengajuans') }}" method="GET" class="relative group">
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama karyawan..." 
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau kode..." 
                             class="pl-10 pr-4 py-2.5 bg-white/80 backdrop-blur-md border-emerald-100 rounded-2xl focus:ring-emerald-500 focus:border-emerald-500 text-sm w-64 transition-all group-hover:w-80 shadow-sm">
                         <div class="absolute left-3 top-3 text-emerald-500">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
@@ -84,7 +85,7 @@
                         <thead class="bg-emerald-50/50 text-emerald-900 uppercase text-[10px] font-black tracking-widest border-b border-emerald-100">
                             <tr>
                                 <th class="px-8 py-5 text-center w-20">Foto</th>
-                                <th class="px-8 py-5">Karyawan</th>
+                                <th class="px-8 py-5">Karyawan & Kode</th>
                                 <th class="px-8 py-5 text-center">Tipe</th>
                                 <th class="px-8 py-5">Periode & Alasan</th>
                                 <th class="px-8 py-5 text-center">Bukti</th>
@@ -99,8 +100,11 @@
                                     <img src="https://ui-avatars.com/api/?name={{ urlencode($p->user->name) }}&background=10b981&color=fff" class="w-12 h-12 rounded-2xl shadow-sm border border-white mx-auto">
                                 </td>
                                 <td class="px-8 py-5">
-                                    <div class="font-black text-emerald-900 text-sm">{{ $p->user->name }}</div>
-                                    <div class="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">{{ $p->user->email }}</div>
+                                    <div class="flex flex-col">
+                                        <span class="text-[9px] font-black text-emerald-500 tracking-tighter mb-0.5">#{{ $p->kode_pengajuan }}</span>
+                                        <div class="font-black text-emerald-900 text-sm">{{ $p->user->name }}</div>
+                                        <div class="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">{{ $p->user->email }}</div>
+                                    </div>
                                 </td>
                                 <td class="px-8 py-5 text-center">
                                     @php
@@ -166,7 +170,6 @@
                                                 </button>
                                             </form>
 
-                                            {{-- Tombol Edit --}}
                                             <button @click="
                                                 showEditModal = true; 
                                                 editData = { 

@@ -8,7 +8,8 @@ use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\KehadiranController;
 use App\Http\Controllers\Admin\PengajuanController;
 use App\Http\Controllers\AdminProfileController;
-
+use App\Http\Controllers\UserSettingController;
+use App\Http\Controllers\PengajuanUserController; // <--- 1. Import Controller Baru
 
 // Halaman Depan
 Route::get('/', function () {
@@ -27,30 +28,34 @@ Route::get('/dashboard', function () {
 Route::middleware('auth')->group(function () {
     
     // Profile Management
-    // Contoh: User harus konfirmasi password dulu sebelum bisa buka halaman Edit Profil
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Menu Kehadiran (Folder: views/kehadiran/index.blade.php)
+    // Menu Kehadiran
     Route::get('/kehadiran', function () {
         return view('kehadiran');
     })->name('kehadiran');
 
-    // Menu Riwayat (Folder: views/riwayat/index.blade.php)
+    // Menu Riwayat
     Route::get('/riwayat', function () {
         return view('riwayat');
     })->name('riwayat');
 
-    // Menu Pengajuan (Folder: views/pengajuan/index.blade.php)
+    // Menu Pengajuan
     Route::get('/pengajuan', function () {
         return view('pengajuan');
     })->name('pengajuan');
+    Route::post('/pengajuan/user-store', [PengajuanUserController::class, 'store'])->name('pengajuan.user.store');
 
     // Menu Pengaturan (Folder: views/pengaturan/index.blade.php)
     Route::get('/pengaturan', function () {
         return view('pengaturan');
     })->name('pengaturan');
+
+    // 2. Route Backend Simpan Pengaturan
+    Route::post('/pengaturan/update', [UserSettingController::class, 'update'])->name('settings.update');
+    
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -64,6 +69,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/karyawans', [KaryawanController::class, 'store'])->name('karyawans.store');
     Route::put('/karyawans/{user}', [KaryawanController::class, 'update'])->name('karyawans.update'); 
     Route::delete('/karyawans/{user}', [KaryawanController::class, 'destroy'])->name('karyawans.destroy');
+    Route::post('/jabatans', [KaryawanController::class, 'storeJabatan'])->name('jabatans.store');
+    Route::post('/units', [KaryawanController::class, 'storeUnit'])->name('units.store');
 
     // Kehadiran
     Route::get('/kehadirans', [KehadiranController::class, 'index'])->name('kehadirans');
@@ -78,7 +85,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/pengajuans/{id}/status', [PengajuanController::class, 'updateStatus'])->name('pengajuans.status');
     Route::delete('/pengajuans/{id}', [PengajuanController::class, 'destroy'])->name('pengajuans.destroy');
     
-    // Export Pengajuan (Disesuaikan agar konsisten dengan prefix admin)
+    // Export Pengajuan
     Route::get('/pengajuans/export', [PengajuanController::class, 'export'])->name('pengajuans.export');
     
     // Profile Admin

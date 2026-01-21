@@ -4,7 +4,7 @@
             <div class="flex">
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}" class="transition transform hover:scale-105">
-                        <img src="{{ asset('images/logors.png') }}" alt="Logo RSU Anna Medika" class="block h-14 w-auto drop-shadow-sm">
+                        <img src="{{ asset('images/users/logors.png') }}" alt="Logo RSU Anna Medika" class="block h-14 w-auto drop-shadow-sm">
                     </a>
                 </div>
 
@@ -40,16 +40,27 @@
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-4 py-2 border-2 border-emerald-100 text-sm leading-4 font-bold rounded-full text-gray-700 bg-white/80 hover:bg-emerald-50 hover:border-emerald-300 transition duration-150 shadow-sm overflow-hidden">
-                            <img src="{{ asset('images/' . (Auth::user()->foto ?? 'default.jpg')) }}" class="w-8 h-8 rounded-full object-cover me-2 border border-emerald-200">
+                            <img src="{{ asset('images/users/' . (Auth::user()->foto ?? 'default.jpg')) }}" class="w-8 h-8 rounded-full object-cover me-2 border border-emerald-200">
                             <div>{{ Auth::user()->name }}</div>
                         </button>
                     </x-slot>
 
                     <x-slot name="content">
-                        <div class="px-4 py-2 border-b border-gray-100 bg-emerald-50/50">
-                            <p class="text-[10px] text-emerald-600 uppercase font-bold tracking-widest">Jabatan</p>
-                            <p class="text-xs text-gray-700 font-bold italic">{{ Auth::user()->jabatan ?? 'Staff RSU' }}</p>
+                        <div class="px-4 py-3 border-b border-gray-100 bg-emerald-50/50">
+                            <p class="text-[10px] text-emerald-600 uppercase font-bold tracking-widest">Informasi Pegawai</p>
+                            <p class="text-xs text-gray-700 font-bold truncate">{{ Auth::user()->jabatan->nama_jabatan ?? 'Staff RSU' }}</p>
+                            
+                            <div class="mt-1 flex flex-wrap gap-1">
+                                @forelse(Auth::user()->units as $unit)
+                                    <span class="text-[9px] bg-white border border-emerald-200 text-emerald-700 px-1 rounded font-medium uppercase">
+                                        {{ $unit->kode_unit }}
+                                    </span>
+                                @empty
+                                    <span class="text-[9px] text-gray-400 italic">No Unit</span>
+                                @endforelse
+                            </div>
                         </div>
+
                         <x-dropdown-link :href="route('profile.edit')"> {{ __('Profil Saya') }} </x-dropdown-link>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
@@ -102,10 +113,21 @@
 
         <div class="pt-4 pb-1 border-t border-emerald-100 bg-emerald-50/40">
             <div class="px-4 flex items-center">
-                <img src="{{ asset('images/' . (Auth::user()->foto ?? 'default.jpg')) }}" class="w-12 h-12 rounded-full object-cover border-2 border-emerald-500">
+                <img src="{{ asset('images/users/' . (Auth::user()->foto ?? 'default.jpg')) }}" class="w-12 h-12 rounded-full object-cover border-2 border-emerald-500">
                 <div class="ms-3">
                     <div class="font-bold text-base text-gray-800">{{ Auth::user()->name }}</div>
-                    <div class="font-medium text-sm text-emerald-700 italic">{{ Auth::user()->jabatan ?? 'Staff RSU' }}</div>
+                    <div class="font-medium text-xs text-emerald-700 italic">
+                        {{ Auth::user()->jabatan->nama_jabatan ?? 'Staff RSU' }}
+                    </div>
+                    <div class="mt-1 flex flex-wrap gap-1">
+                        @forelse(Auth::user()->units as $unit)
+                            <span class="text-[8px] bg-emerald-100 border border-emerald-200 text-emerald-700 px-1.5 py-0.5 rounded font-bold uppercase">
+                                {{ $unit->kode_unit }}
+                            </span>
+                        @empty
+                            <span class="text-[9px] text-gray-400 italic">No Unit</span>
+                        @endforelse
+                    </div>
                 </div>
             </div>
             

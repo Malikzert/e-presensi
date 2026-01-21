@@ -18,10 +18,13 @@ class PengajuanController extends Controller
         $query = Pengajuan::with('user');
 
         // Filter Pencarian Nama
-        if ($request->filled('search')) {
-            $query->whereHas('user', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%');
-            });
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where('kode_pengajuan', 'LIKE', "%{$search}%")
+                ->orWhereHas('user', function($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%");
+                });
         }
 
         // Filter Status
@@ -111,56 +114,63 @@ class PengajuanController extends Controller
         return back()->with('success', 'Data pengajuan berhasil diperbarui.');
     }
 
+        // app/Http/Controllers/Admin/PengajuanController.php
+
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
             'status' => 'required|in:Pending,Disetujui,Ditolak',
         ]);
-
+        
         $pengajuan = Pengajuan::findOrFail($id);
-        $user = $pengajuan->user;
+        
+        // Ambil User langsung dari Database berdasarkan user_id di pengajuan
+        $user = User::find($pengajuan->user_id); 
+        // dd($pengajuan->user_id, $user->id, $user->kuota_cuti);
+        if (!$user) {
+            return back()->with('error', 'User tidak ditemukan.');
+        }
 
-        // Logika Pengurangan Kuota Cuti jika Disetujui
+        // Jika status berubah jadi Disetujui
         if ($request->status == 'Disetujui' && $pengajuan->status !== 'Disetujui') {
             if ($pengajuan->jenis_pengajuan == 'Cuti') {
-                $mulai = Carbon::parse($pengajuan->tgl_mulai);
-                $selesai = Carbon::parse($pengajuan->tgl_selesai);
-                $durasi = $mulai->diffInDays($selesai) + 1;
+                
+                // Hitung durasi menggunakan objek Carbon dari model (karena sudah di-cast)
+                $durasi = $pengajuan->tgl_mulai->diffInDays($pengajuan->tgl_selesai) + 1;
 
                 if ($user->kuota_cuti < $durasi) {
-                    return back()->with('error', 'Gagal! Kuota cuti karyawan ini sisa ' . $user->kuota_cuti . ' hari, sedangkan pengajuan ' . $durasi . ' hari.');
+                    return back()->with('error', 'Kuota tidak cukup. Sisa: ' . $user->kuota_cuti);
                 }
 
-                $user->decrement('kuota_cuti', $durasi);
+                // PERBAIKAN UTAMA: Update langsung ke DB menggunakan query builder agar pasti terpangkas
+                User::where('id', $user->id)->decrement('kuota_cuti', $durasi);
             }
         }
 
-        // Kembalikan kuota jika dibatalkan (Disetujui -> Ditolak)
+        // Jika dibatalkan (Disetujui ke Ditolak)
         if ($request->status == 'Ditolak' && $pengajuan->status == 'Disetujui') {
             if ($pengajuan->jenis_pengajuan == 'Cuti') {
-                $mulai = Carbon::parse($pengajuan->tgl_mulai);
-                $selesai = Carbon::parse($pengajuan->tgl_selesai);
-                $durasi = $mulai->diffInDays($selesai) + 1;
-                
-                $user->increment('kuota_cuti', $durasi);
+                $durasi = $pengajuan->tgl_mulai->diffInDays($pengajuan->tgl_selesai) + 1;
+                User::where('id', $user->id)->increment('kuota_cuti', $durasi);
             }
         }
 
         $pengajuan->update(['status' => $request->status]);
 
-        return back()->with('success', 'Status pengajuan berhasil diperbarui.');
+        return back()->with('success', 'Status updated. Kuota ' . $user->name . ' sekarang: ' . $user->fresh()->kuota_cuti);
     }
-
     public function destroy($id)
     {
         $pengajuan = Pengajuan::findOrFail($id);
-        
-        if ($pengajuan->status == 'Disetujui' && $pengajuan->jenis_pengajuan == 'Cuti') {
+    
+        // Pastikan relasi user ada sebelum increment
+        if ($pengajuan->status == 'Disetujui' && $pengajuan->jenis_pengajuan == 'Cuti' && $pengajuan->user) {
             $mulai = Carbon::parse($pengajuan->tgl_mulai);
             $selesai = Carbon::parse($pengajuan->tgl_selesai);
             $durasi = $mulai->diffInDays($selesai) + 1;
             $pengajuan->user->increment('kuota_cuti', $durasi);
         }
+        
 
         // Hapus file fisik bukti saat data dihapus
         if ($pengajuan->bukti && File::exists(public_path('uploads/bukti/' . $pengajuan->bukti))) {

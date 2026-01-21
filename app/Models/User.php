@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail; // 1. Bagian ini dibuka comment-nya
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-// 2. Tambahkan "implements MustVerifyEmail" di akhir baris class
 class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -21,12 +21,17 @@ class User extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'nik',
+        'nopeg',   // Tambahkan ini
+        'gender',  // Tambahkan ini
         'password',
-        'departemen_id',
-        'jabatan',
+        'jabatan_id', // Menggunakan ID Jabatan
         'foto',
         'is_admin',
         'shift_id',
+        'notif_pengingat',
+        'notif_status_pengajuan',
+        'track_lokasi',
+        'kuota_cuti',
     ];
 
     /**
@@ -46,15 +51,26 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'notif_pengingat' => 'boolean',
+            'notif_status_pengajuan' => 'boolean',
+            'track_lokasi' => 'boolean',
         ];
     }
 
     /**
-     * Relasi ke Tabel Departemen.
+     * Relasi ke Tabel Jabatan (One-to-Many).
      */
-    public function departemen(): BelongsTo
+    public function jabatan(): BelongsTo
     {
-        return $this->belongsTo(Departemen::class);
+        return $this->belongsTo(Jabatan::class);
+    }
+
+    /**
+     * Relasi ke Tabel Unit (Many-to-Many / Rangkap).
+     */
+    public function units(): BelongsToMany
+    {
+        return $this->belongsToMany(Unit::class, 'unit_user');
     }
 
     /**

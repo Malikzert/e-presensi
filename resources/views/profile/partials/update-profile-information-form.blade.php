@@ -22,7 +22,7 @@
             <div class="relative">
                 <div class="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-100">
                     <template x-if="! photoPreview">
-                        <img src="{{ asset('images/' . ($user->foto ?? 'default.jpg')) }}" class="h-full w-full object-cover">
+                        <img src="{{ asset('images/users/' . ($user->foto ?? 'default.jpg')) }}" class="h-full w-full object-cover">
                     </template>
                     
                     <template x-if="photoPreview">
@@ -55,28 +55,59 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+            <div class="md:col-span-2">
                 <x-input-label for="name" :value="__('Nama Lengkap')" class="text-emerald-700 font-semibold" />
                 <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
                 <x-input-error class="mt-2" :messages="$errors->get('name')" />
             </div>
 
             <div>
-                <x-input-label for="nik" :value="__('NIK / Nomor Induk Pegawai')" class="text-emerald-700 font-semibold" />
-                <x-text-input id="nik" name="nik" type="text" class="mt-1 block w-full bg-gray-50" :value="old('nik', $user->nik)" readonly />
+                <x-input-label for="nik" :value="__('Nomor Induk Kependudukan (NIK)')" class="text-emerald-700 font-semibold" />
+                <x-text-input id="nik" name="nik" type="text" class="mt-1 block w-full bg-gray-100" :value="old('nik', $user->nik)" readonly />
                 <p class="text-[10px] text-gray-400 mt-1">*NIK tidak dapat diubah secara mandiri</p>
                 <x-input-error class="mt-2" :messages="$errors->get('nik')" />
             </div>
 
-            <div class="md:col-span-2">
+            <div>
+                <x-input-label for="nopeg" :value="__('Nomor Pegawai (Nopeg)')" class="text-emerald-700 font-semibold" />
+                <x-text-input id="nopeg" name="nopeg" type="text" class="mt-1 block w-full bg-gray-100 italic font-mono" :value="old('nopeg', $user->nopeg)" readonly />
+                <p class="text-[10px] text-gray-400 mt-1">*Nopeg bersifat permanen</p>
+                <x-input-error class="mt-2" :messages="$errors->get('nopeg')" />
+            </div>
+
+            <div>
+                <x-input-label for="gender" :value="__('Jenis Kelamin')" class="text-emerald-700 font-semibold" />
+                <select id="gender" name="gender" class="mt-1 block w-full border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 rounded-md shadow-sm">
+                    <option value="" disabled selected>Pilih Jenis Kelamin</option>
+                    <option value="Laki-laki" {{ old('gender', $user->gender) === 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                    <option value="Perempuan" {{ old('gender', $user->gender) === 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                </select>
+                <x-input-error class="mt-2" :messages="$errors->get('gender')" />
+            </div>
+
+            <div>
                 <x-input-label for="email" :value="__('Email Institusi')" class="text-emerald-700 font-semibold" />
                 <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
                 <x-input-error class="mt-2" :messages="$errors->get('email')" />
             </div>
             
-            <div class="md:col-span-2">
+            <div>
                 <x-input-label for="jabatan" :value="__('Jabatan Saat Ini')" class="text-emerald-700 font-semibold" />
-                <x-text-input id="jabatan" name="jabatan" type="text" class="mt-1 block w-full bg-gray-50" :value="old('jabatan', $user->jabatan)" readonly />
+                <x-text-input id="jabatan" type="text" class="mt-1 block w-full bg-gray-100" 
+                    :value="$user->jabatan->nama_jabatan ?? 'Belum Ditentukan'" readonly />
+            </div>
+
+            <div>
+                <x-input-label :value="__('Unit Kerja')" class="text-emerald-700 font-semibold" />
+                <div class="mt-1 flex flex-wrap gap-2 p-2.5 bg-gray-100 border border-gray-300 rounded-md min-h-[42px]">
+                    @forelse($user->units as $unit)
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            {{ $unit->nama_unit }}
+                        </span>
+                    @empty
+                        <span class="text-xs text-gray-500 italic">Tidak ada unit kerja</span>
+                    @endforelse
+                </div>
             </div>
         </div>
 

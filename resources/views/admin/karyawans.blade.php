@@ -13,15 +13,23 @@
             openModal: false, 
             editMode: false, 
             deleteModal: false, 
+            modalJabatan: false,
+            modalUnit: false,
             deleteAction: '', 
-            currentKaryawan: { name: '', nik: '', jabatan: '', email: '', foto: '' } 
+            currentKaryawan: { name: '', nik: '', nopeg: '', gender: '', jabatan_id: '', email: '', foto: '', units: [] } 
          }">
         
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             @include('admin.navs', ['title' => 'Data Karyawan'])
 
-            <div class="flex justify-end mb-6">
-                <button @click="openModal = true; editMode = false; currentKaryawan = {name:'', nik:'', jabatan:'', email:'', foto: 'default.jpg'}" 
+            <div class="flex flex-wrap justify-end gap-3 mb-6">
+                <button @click="modalJabatan = true" class="bg-white text-emerald-600 border border-emerald-100 px-4 py-3 rounded-2xl font-bold text-xs shadow-sm hover:bg-emerald-50 transition-all">
+                    + Jabatan
+                </button>
+                <button @click="modalUnit = true" class="bg-white text-emerald-600 border border-emerald-100 px-4 py-3 rounded-2xl font-bold text-xs shadow-sm hover:bg-emerald-50 transition-all">
+                    + Unit
+                </button>
+                <button @click="openModal = true; editMode = false; currentKaryawan = {name:'', nik:'', nopeg:'', gender:'', jabatan_id:'', email:'', foto: 'default.jpg', units: []}" 
                         class="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black text-sm shadow-xl shadow-emerald-200 flex items-center gap-2 hover:bg-emerald-700 transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     Tambah Karyawan Baru
@@ -33,16 +41,11 @@
                     <input type="text" 
                         name="search" 
                         value="{{ request('search') }}"
-                        placeholder="Cari Nama, NIK, atau Jabatan..." 
+                        placeholder="Cari Nama, NIK, Nopeg, atau Jabatan..." 
                         class="w-full bg-white/80 backdrop-blur-md border border-emerald-100 rounded-2xl py-3 px-5 pl-12 text-sm focus:ring-emerald-500 focus:border-emerald-500 shadow-lg shadow-emerald-900/5 transition-all">
                     <div class="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
-                    @if(request('search'))
-                        <a href="{{ route('admin.karyawans') }}" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-rose-500 transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </a>
-                    @endif
                 </form>
             </div>
 
@@ -56,16 +59,33 @@
                         
                         <div>
                             <h4 class="font-black text-gray-800">{{ $karyawan->name }}</h4>
-                            <p class="text-xs text-emerald-600 font-bold uppercase">{{ $karyawan->jabatan ?? 'Staff RSU' }}</p>
-                            <p class="text-[9px] text-gray-400 font-bold">{{ $karyawan->email }}</p>
+                            <p class="text-[10px] text-emerald-600 font-bold uppercase">{{ $karyawan->jabatan->nama_jabatan ?? 'N/A' }} | {{ $karyawan->gender }}</p>
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                @foreach($karyawan->units as $u)
+                                    <span class="text-[8px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-md font-bold">{{ $u->kode_unit }}</span>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
 
                     <div class="mt-6 pt-6 border-t border-emerald-50 flex justify-between items-center text-[10px] font-bold text-gray-400">
-                        <span>NIK: {{ $karyawan->nik ?? '-' }}</span>
+                        <div class="flex flex-col">
+                            <span>NIK: {{ $karyawan->nik ?? '-' }}</span>
+                            <span class="text-emerald-700 font-mono">NP: {{ $karyawan->nopeg ?? '-' }}</span>
+                        </div>
                         <div class="flex gap-3">
-                            <button @click="openModal = true; editMode = true; currentKaryawan = {{ json_encode($karyawan) }}" 
-                                    class="text-emerald-600 hover:text-emerald-800 transition-colors uppercase tracking-widest">Edit</button>
+                            <button @click="openModal = true; editMode = true; currentKaryawan = {
+                                id: '{{ $karyawan->id }}',
+                                name: '{{ $karyawan->name }}',
+                                nik: '{{ $karyawan->nik }}',
+                                nopeg: '{{ $karyawan->nopeg }}',
+                                gender: '{{ $karyawan->gender }}',
+                                email: '{{ $karyawan->email }}',
+                                jabatan_id: '{{ $karyawan->jabatan_id }}',
+                                foto: '{{ $karyawan->foto }}',
+                                units: {{ $karyawan->units->pluck('id') }}
+                            }" 
+                            class="text-emerald-600 hover:text-emerald-800 transition-colors uppercase tracking-widest">Edit</button>
                             
                             <button type="button" 
                                     @click="deleteModal = true; deleteAction = '{{ route('admin.karyawans.destroy', $karyawan->id) }}'" 
@@ -107,8 +127,42 @@
                             <input type="text" name="nik" x-model="currentKaryawan.nik" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3 text-sm focus:ring-emerald-500 shadow-inner" required>
                         </div>
                         <div>
+                            <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Nopeg</label>
+                            <input type="text" name="nopeg" x-model="currentKaryawan.nopeg" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3 text-sm focus:ring-emerald-500 shadow-inner font-mono" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Jenis Kelamin</label>
+                            <select name="gender" x-model="currentKaryawan.gender" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3 text-sm focus:ring-emerald-500 shadow-inner" required>
+                                <option value="">Pilih</option>
+                                <option value="Laki-laki">Laki-laki</option>
+                                <option value="Perempuan">Perempuan</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Jabatan</label>
-                            <input type="text" name="jabatan" x-model="currentKaryawan.jabatan" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3 text-sm focus:ring-emerald-500 shadow-inner" required>
+                            <select name="jabatan_id" x-model="currentKaryawan.jabatan_id" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3 text-sm focus:ring-emerald-500 shadow-inner" required>
+                                <option value="">Pilih Jabatan</option>
+                                @foreach($jabatans as $j)
+                                    <option value="{{ $j->id }}">{{ $j->nama_jabatan }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Unit Kerja (Bisa Rangkap)</label>
+                        <div class="grid grid-cols-2 gap-2 mt-2 bg-emerald-50/30 p-4 rounded-2xl border border-emerald-100 max-h-40 overflow-y-auto shadow-inner">
+                            @foreach($units as $u)
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="checkbox" name="unit_ids[]" value="{{ $u->id }}" 
+                                           :checked="currentKaryawan.units.includes({{ $u->id }})"
+                                           class="rounded border-emerald-200 text-emerald-600 focus:ring-emerald-500">
+                                    <span class="text-[10px] font-bold text-gray-600 group-hover:text-emerald-600">{{ $u->nama_unit }}</span>
+                                </label>
+                            @endforeach
                         </div>
                     </div>
 
@@ -137,6 +191,46 @@
                     <div class="flex gap-3 mt-6">
                         <button type="button" @click="openModal = false" class="flex-1 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-all">Batal</button>
                         <button type="submit" class="flex-1 py-3 bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div x-show="modalJabatan" x-cloak class="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-emerald-900/60 backdrop-blur-sm">
+            <div @click.away="modalJabatan = false" class="bg-white rounded-[35px] p-8 w-full max-w-sm shadow-2xl border border-emerald-100">
+                <h3 class="text-xl font-black text-emerald-900 mb-4">Tambah Jabatan</h3>
+                <form action="{{ route('admin.jabatans.store') }}" method="POST">
+                    @csrf
+                    <div class="mb-4">
+                        <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Nama Jabatan</label>
+                        <input type="text" name="nama_jabatan" class="w-full rounded-2xl border-emerald-100 bg-emerald-50 p-3 text-sm focus:ring-emerald-500 shadow-inner" required placeholder="Contoh: Perawat Pelaksana">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" @click="modalJabatan = false" class="flex-1 py-3 rounded-xl font-bold text-gray-400 text-xs">Batal</button>
+                        <button type="submit" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black text-xs shadow-lg shadow-emerald-200">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div x-show="modalUnit" x-cloak class="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-emerald-900/60 backdrop-blur-sm">
+            <div @click.away="modalUnit = false" class="bg-white rounded-[35px] p-8 w-full max-w-sm shadow-2xl border border-emerald-100">
+                <h3 class="text-xl font-black text-emerald-900 mb-4">Tambah Unit Baru</h3>
+                <form action="{{ route('admin.units.store') }}" method="POST">
+                    @csrf
+                    <div class="space-y-4 mb-6">
+                        <div>
+                            <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Kode Unit</label>
+                            <input type="text" name="kode_unit" class="w-full rounded-2xl border-emerald-100 bg-emerald-50 p-3 text-sm focus:ring-emerald-500 shadow-inner" required placeholder="Contoh: IGD">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Nama Unit</label>
+                            <input type="text" name="nama_unit" class="w-full rounded-2xl border-emerald-100 bg-emerald-50 p-3 text-sm focus:ring-emerald-500 shadow-inner" required placeholder="Contoh: Gawat Darurat">
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="button" @click="modalUnit = false" class="flex-1 py-3 rounded-xl font-bold text-gray-400 text-xs">Batal</button>
+                        <button type="submit" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-black text-xs shadow-lg shadow-emerald-200">Simpan</button>
                     </div>
                 </form>
             </div>
