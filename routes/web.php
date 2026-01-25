@@ -7,9 +7,14 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\KehadiranController;
 use App\Http\Controllers\Admin\PengajuanController;
+use App\Http\Controllers\Admin\JadwalController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\UserSettingController;
-use App\Http\Controllers\PengajuanUserController; // <--- 1. Import Controller Baru
+use App\Http\Controllers\PengajuanUserController;
+use App\Http\Controllers\UserKehadiranController; // Pastikan Controller ini dibuat
+use App\Http\Controllers\UserJadwalController;
+use App\Http\Controllers\RiwayatController;
+use App\Http\Controllers\USerDashboardController;
 
 // Halaman Depan
 Route::get('/', function () {
@@ -26,21 +31,22 @@ Route::get('/dashboard', function () {
 
 // Grup Route yang Memerlukan Login (Auth)
 Route::middleware('auth')->group(function () {
-    
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/presensi/pdf', [UserDashboardController::class, 'downloadPdf'])->name('presensi.pdf');
+    Route::get('/presensi/csv', [UserDashboardController::class, 'exportCsv'])->name('presensi.csv');
     // Profile Management
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Menu Kehadiran
-    Route::get('/kehadiran', function () {
-        return view('kehadiran');
-    })->name('kehadiran');
-
+    // --- PEMBARUAN MENU KEHADIRAN (Hanya akses via WiFi Local) ---
+   // Di dalam Route::middleware('auth')->group(function () { ...
+    Route::get('/kehadiran', [UserKehadiranController::class, 'index'])->name('kehadiran');
+    Route::post('/kehadiran/check-in', [UserKehadiranController::class, 'checkIn'])->name('kehadiran.checkin');
+    Route::post('/kehadiran/check-out', [UserKehadiranController::class, 'checkOut'])->name('kehadiran.checkout');
+    Route::get('/jadwal', [UserJadwalController::class, 'index'])->name('jadwal');
     // Menu Riwayat
-    Route::get('/riwayat', function () {
-        return view('riwayat');
-    })->name('riwayat');
+    Route::get('/riwayat', [RiwayatController::class, 'index'])->name('riwayat');
 
     // Menu Pengajuan
     Route::get('/pengajuan', function () {
@@ -72,11 +78,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/jabatans', [KaryawanController::class, 'storeJabatan'])->name('jabatans.store');
     Route::post('/units', [KaryawanController::class, 'storeUnit'])->name('units.store');
 
-    // Kehadiran
+    // Kehadiran (Admin Side)
     Route::get('/kehadirans', [KehadiranController::class, 'index'])->name('kehadirans');
     Route::post('/kehadirans', [KehadiranController::class, 'store'])->name('kehadirans.store');
     Route::put('/kehadirans/{id}', [KehadiranController::class, 'update'])->name('kehadirans.update');
     Route::delete('/kehadirans/{id}', [KehadiranController::class, 'destroy'])->name('kehadirans.destroy');
+
+    // Jadwal
+    Route::get('/jadwals', [JadwalController::class, 'index'])->name('jadwals');
+    Route::post('/jadwals', [JadwalController::class, 'store'])->name('jadwals.store');
+    Route::put('/jadwals/{id}', [JadwalController::class, 'update'])->name('jadwals.update');
+    Route::delete('/jadwals/{id}', [JadwalController::class, 'destroy'])->name('jadwals.destroy');
+    Route::post('/jadwals/autofill', [JadwalController::class, 'autofill'])->name('jadwals.autofill');
 
     // Pengajuan
     Route::get('/pengajuans', [PengajuanController::class, 'index'])->name('pengajuans');

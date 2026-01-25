@@ -22,7 +22,7 @@
 
             <div class="mb-8">
                 <h2 class="text-3xl font-bold text-emerald-800 tracking-tight">Form Pengajuan</h2>
-                <p class="text-gray-600 font-medium">Silahkan lengkapi formulir di bawah untuk mengajukan izin atau cuti medis di RSU Anna Medika.</p>
+                <p class="text-gray-600 font-medium">Silahkan lengkapi formulir di bawah untuk mengajukan izin atau cuti / tukar shift medis di RSU Anna Medika.</p>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -40,7 +40,7 @@
                                 <div class="group">
                                     <label class="block text-sm font-bold text-gray-700 mb-2 group-focus-within:text-emerald-600 transition-colors">Jenis Pengajuan</label>
                                     <select name="jenis_pengajuan" required class="w-full border-gray-200 rounded-xl focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all cursor-pointer">
-                                        <option value="Cuti">Cuti Tahunan</option>
+                                        <option value="Cuti">Cuti / Tukar Shift</option>
                                         <option value="Sakit">Izin Sakit (Wajib Surat Dokter)</option>
                                         <option value="Izin">Izin Keperluan Mendesak</option>
                                     </select>
@@ -106,7 +106,7 @@
                         
                         <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2 relative group-hover:text-emerald-700 transition-colors">
                             <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            Sisa Kuota Cuti
+                            Sisa Kuota Pengajuan
                         </h3>
                         
                         <div class="flex items-end gap-2 mb-2 relative">
@@ -119,7 +119,7 @@
                         
                         <div class="mt-6 pt-6 border-t border-gray-100 space-y-3 relative">
                             <div class="flex justify-between text-sm p-2 hover:bg-emerald-50 rounded-lg transition-colors border border-transparent hover:border-emerald-100">
-                                <span class="text-gray-500 font-medium">Cuti Diambil</span>
+                                <span class="text-gray-500 font-medium">Cuti / Tukar Shift Diambil</span>
                                 <span class="font-bold text-gray-700">
                                     @php
                                         $totalCuti = \App\Models\Pengajuan::where('user_id', Auth::id())
@@ -162,7 +162,7 @@
                             Informasi Penting
                         </h3>
                         <ul class="text-sm space-y-3 opacity-90 leading-relaxed font-medium">
-                            <li class="flex gap-2"><span>•</span> <span>Pengajuan cuti maksimal <strong class="text-emerald-300">H-3</strong> sebelum tanggal mulai.</span></li>
+                            <li class="flex gap-2"><span>•</span> <span>Pengajuan cuti / tukar shift maksimal <strong class="text-emerald-300">H-3</strong> sebelum tanggal mulai.</span></li>
                             <li class="flex gap-2"><span>•</span> <span>Izin sakit wajib melampirkan <strong class="text-emerald-300">Surat Keterangan Dokter</strong>.</span></li>
                             <li class="flex gap-2"><span>•</span> <span>Verifikasi dilakukan dalam <strong class="text-emerald-300">1x24 jam</strong> kerja.</span></li>
                         </ul>

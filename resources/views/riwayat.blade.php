@@ -46,30 +46,74 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-emerald-50">
+                                @forelse($riwayatKehadiran as $Kehadiran)
                                 <tr class="hover:bg-emerald-50/40 transition-colors group">
-                                    <td class="px-8 py-5 font-bold text-gray-700">07 Jan 2026</td>
-                                    <td class="px-8 py-5">
-                                        <span class="text-emerald-600 font-black px-3 py-1 bg-emerald-50 rounded-lg">07:30:12</span>
+                                    <td class="px-8 py-5 font-bold text-gray-700">
+                                        {{ \Carbon\Carbon::parse($Kehadiran->tanggal)->translatedFormat('d M Y') }}
                                     </td>
                                     <td class="px-8 py-5">
-                                        <span class="text-orange-600 font-black px-3 py-1 bg-orange-50 rounded-lg">16:05:44</span>
+                                        <span class="text-emerald-600 font-black px-3 py-1 bg-emerald-50 rounded-lg">
+                                            {{ $Kehadiran->jam_masuk ?? '--:--' }}
+                                        </span>
                                     </td>
-                                    <td class="px-8 py-5 font-medium text-gray-600">8j 35m</td>
+                                    <td class="px-8 py-5">
+                                        <span class="text-orange-600 font-black px-3 py-1 bg-orange-50 rounded-lg">
+                                            {{ $Kehadiran->jam_pulang ?? '--:--' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-8 py-5 font-medium text-gray-600">
+                                        @if($Kehadiran->jam_masuk && $Kehadiran->jam_pulang)
+                                            @php
+                                                $masuk = \Carbon\Carbon::parse($Kehadiran->jam_masuk);
+                                                $pulang = \Carbon\Carbon::parse($Kehadiran->jam_pulang);
+                                                $diff = $masuk->diff($pulang);
+                                            @endphp
+                                            {{ $diff->h }}j {{ $diff->i }}m
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td class="px-8 py-5 text-center">
-                                        <span class="px-4 py-1.5 bg-emerald-500 text-white rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm">Tepat Waktu</span>
+                                        @php
+                                            // Mengambil status dan membersihkan spasi jika ada
+                                            $statusRaw = trim($Kehadiran->status);
+                                            
+                                            // Pemetaan Label
+                                            $statusLabel = match($statusRaw) {
+                                                'Hadir' => 'Hadir',
+                                                'Hadir (Terlambat)', 'Terlambat' => 'Hadir (Terlambat)',
+                                                'Izin' => 'Izin',
+                                                'Sakit' => 'Sakit',
+                                                default => 'Alpa',
+                                            };
+
+                                            // Pemetaan Warna
+                                            $colorClass = match($statusRaw) {
+                                                'Hadir' => 'bg-emerald-500',
+                                                'Hadir (Terlambat)', 'Terlambat' => 'bg-amber-500',
+                                                'Izin', 'Sakit' => 'bg-blue-500',
+                                                default => 'bg-rose-500',
+                                            };
+                                            
+                                            // Logika tambahan: Jika status kosong tapi ada jam masuk, anggap hadir/terlambat
+                                            if (empty($statusRaw) && !empty($Kehadiran->jam_masuk)) {
+                                                $statusLabel = 'Hadir';
+                                                $colorClass = 'bg-emerald-500';
+                                            }
+                                        @endphp
+                                        
+                                        <span class="px-4 py-1.5 {{ $colorClass }} text-white rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm">
+                                            {{ $statusLabel }}
+                                        </span>
                                     </td>
                                 </tr>
-                                <tr class="hover:bg-emerald-50/40 transition-colors group">
-                                    <td class="px-8 py-5 font-bold text-gray-700">06 Jan 2026</td>
-                                    <td class="px-8 py-5">
-                                        <span class="text-rose-600 font-black px-3 py-1 bg-rose-50 rounded-lg">07:55:00</span>
-                                    </td>
-                                    <td class="px-8 py-5 text-gray-400 font-medium">16:00:10</td>
-                                    <td class="px-8 py-5 font-medium text-gray-600">8j 5m</td>
-                                    <td class="px-8 py-5 text-center">
-                                        <span class="px-4 py-1.5 bg-rose-500 text-white rounded-full text-[10px] font-black uppercase tracking-tighter shadow-sm">Terlambat</span>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="px-8 py-10 text-center text-gray-400 font-medium">
+                                        Belum ada data kehadiran untuk periode ini.
                                     </td>
                                 </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
@@ -82,9 +126,20 @@
                 x-transition:enter-end="opacity-100 translate-y-0"
                 class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
+                @forelse($riwayatPengajuan as $pengajuan)
                 <div class="group bg-white/80 backdrop-blur-md p-8 rounded-[35px] border border-emerald-100 shadow-xl relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-emerald-400 hover:-translate-y-1">
                     <div class="absolute top-0 right-0 p-6">
-                        <span class="px-4 py-1.5 bg-blue-500 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-md">Diproses</span>
+                        @php
+                            $badgeColor = match($pengajuan->status) {
+                                'Disetujui' => 'bg-emerald-500',
+                                'Ditolak' => 'bg-rose-500',
+                                'Diproses' => 'bg-blue-500',
+                                default => 'bg-gray-500'
+                            };
+                        @endphp
+                        <span class="px-4 py-1.5 {{ $badgeColor }} text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-md">
+                            {{ $pengajuan->status }}
+                        </span>
                     </div>
                     
                     <div class="flex items-center gap-5 mb-6">
@@ -92,54 +147,32 @@
                             <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         </div>
                         <div>
-                            <h4 class="font-black text-xl text-gray-800">Cuti Tahunan</h4>
-                            <p class="text-xs text-emerald-600 font-bold">Ref: #CT-2026001</p>
+                            <h4 class="font-black text-xl text-gray-800">{{ $pengajuan->jenis_pengajuan }}</h4>
+                            <p class="text-xs text-emerald-600 font-bold uppercase">Ref: #{{ $pengajuan->id }}</p>
                         </div>
                     </div>
                     
                     <div class="space-y-4 bg-emerald-50/50 p-5 rounded-2xl border border-emerald-50">
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-500 font-medium">Durasi:</span>
-                            <span class="font-black text-emerald-800">3 Hari (12 Jan - 14 Jan)</span>
+                            <span class="font-black text-emerald-800">
+                                {{ \Carbon\Carbon::parse($pengajuan->tanggal_mulai)->translatedFormat('d M') }} - {{ \Carbon\Carbon::parse($pengajuan->tanggal_selesai)->translatedFormat('d M Y') }}
+                            </span>
                         </div>
                         <div class="flex justify-between items-center text-sm pt-3 border-t border-emerald-100/50">
                             <span class="text-gray-500 font-medium">Alasan:</span>
-                            <span class="italic font-bold text-gray-700">Urusan Keluarga</span>
+                            <span class="italic font-bold text-gray-700 truncate ml-4">{{ $pengajuan->alasan }}</span>
                         </div>
                     </div>
-                    <p class="text-[10px] text-gray-400 mt-4 text-right">Diajukan pada 05 Jan 2026 • 10:15 WIB</p>
+                    <p class="text-[10px] text-gray-400 mt-4 text-right">
+                        Diajukan pada {{ $pengajuan->created_at->translatedFormat('d M Y • H:i') }} WIB
+                    </p>
                 </div>
-
-                <div class="group bg-white/80 backdrop-blur-md p-8 rounded-[35px] border border-emerald-100 shadow-xl relative overflow-hidden transition-all duration-300 hover:shadow-2xl hover:border-emerald-400 hover:-translate-y-1">
-                    <div class="absolute top-0 right-0 p-6">
-                        <span class="px-4 py-1.5 bg-emerald-500 text-white rounded-full text-[10px] font-black uppercase tracking-widest shadow-md">Disetujui</span>
-                    </div>
-                    
-                    <div class="flex items-center gap-5 mb-6">
-                        <div class="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 transition-transform group-hover:rotate-12">
-                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <div>
-                            <h4 class="font-black text-xl text-gray-800">Izin Sakit</h4>
-                            <p class="text-xs text-orange-600 font-bold">Ref: #SK-2026004</p>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-4 bg-orange-50/30 p-5 rounded-2xl border border-orange-50">
-                        <div class="flex justify-between items-center text-sm">
-                            <span class="text-gray-500 font-medium">Durasi:</span>
-                            <span class="font-black text-orange-800">1 Hari (02 Jan)</span>
-                        </div>
-                        <div class="flex justify-between items-center text-sm pt-3 border-t border-orange-100/50">
-                            <span class="text-gray-500 font-medium">Lampiran:</span>
-                            <span class="font-black text-emerald-600 flex items-center gap-1 uppercase text-[10px]">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
-                                Surat Dokter.pdf
-                            </span>
-                        </div>
-                    </div>
-                    <p class="text-[10px] text-gray-400 mt-4 text-right">Diajukan pada 01 Jan 2026 • 08:00 WIB</p>
+                @empty
+                <div class="col-span-full py-20 bg-white/50 backdrop-blur-sm rounded-[35px] border-2 border-dashed border-emerald-200 flex flex-col items-center">
+                    <p class="text-gray-400 font-bold">Tidak ada data pengajuan ditemukan.</p>
                 </div>
+                @endforelse
             </div>
 
         </div>

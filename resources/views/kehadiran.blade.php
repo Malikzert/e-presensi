@@ -9,6 +9,42 @@
     <div class="relative z-10 py-12 min-h-screen" x-data="attendanceApp()">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             
+            <template x-if="!isLocalWifi">
+                <div class="mb-6 p-4 bg-rose-100 border-l-4 border-rose-500 text-rose-700 rounded-2xl shadow-sm flex items-center animate-bounce">
+                    <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-xs font-bold uppercase tracking-wider">Akses Terbatas: Silahkan hubungkan perangkat ke Wi-Fi RSU Anna Medika untuk melakukan presensi.</span>
+                </div>
+            </template>
+
+            <template x-if="isLocalWifi && !isInShiftTime">
+                <div class="mb-6 p-4 bg-amber-100 border-l-4 border-amber-500 text-amber-700 rounded-2xl shadow-sm flex items-center">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider block">Bukan Waktu Shift</span>
+                        <span class="text-[10px]">
+                            @if($jadwalInfo)
+                                @if(Carbon\Carbon::now()->lt(Carbon\Carbon::parse($jadwalInfo->tanggal . ' ' . $jadwalInfo->shift->jam_masuk)))
+                                    Sesi belum dimulai. Silahkan kembali pada jam operasional ({{ $jadwalInfo->shift->nama_shift }}).
+                                @else
+                                    Sesi shift Anda ({{ $jadwalInfo->shift->nama_shift }}) telah berakhir.
+                                @endif
+                            @else
+                                Tidak ada jadwal yang terdaftar untuk Anda hari ini.
+                            @endif
+                        </span>
+                    </div>
+                </div>
+            </template>
+            <template x-if="isLocalWifi && isInShiftTime">
+                <div class="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 rounded-2xl shadow-sm flex items-center">
+                    <svg class="w-5 h-5 mr-3 text-emerald-500 animate-pulse" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-[10px] font-bold uppercase">GPS Siap: Pastikan Anda berada di dalam lingkungan RS Anna Medika.</span>
+                </div>
+            </template>
+
             <div class="mb-10 text-center">
                 <span class="px-4 py-1.5 bg-emerald-600 text-white text-[10px] font-black rounded-full uppercase tracking-[0.2em] shadow-lg shadow-emerald-200">
                     Sistem Presensi Digital
@@ -31,8 +67,8 @@
                         <div class="flex flex-col sm:flex-row gap-6 w-full">
                             <button 
                                 @click="checkIn()" 
-                                :disabled="status === 'checked_in'"
-                                :class="status === 'checked_in' ? 'opacity-40 cursor-not-allowed grayscale' : 'bg-emerald-600 hover:bg-emerald-700 hover:scale-[1.02] shadow-xl shadow-emerald-200'"
+                                :disabled="status !== 'idle' || !isLocalWifi || !isInShiftTime"
+                                :class="(status !== 'idle' || !isLocalWifi || !isInShiftTime) ? 'opacity-40 cursor-not-allowed grayscale' : 'bg-emerald-600 hover:bg-emerald-700 hover:scale-[1.02] shadow-xl shadow-emerald-200'"
                                 class="flex-1 py-5 rounded-[25px] text-white font-black text-xl transition-all flex flex-col items-center justify-center gap-2 group">
                                 <svg class="w-8 h-8 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h12m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                                 CHECK IN
@@ -40,8 +76,8 @@
 
                             <button 
                                 @click="checkOut()" 
-                                :disabled="status === 'idle' || status === 'checked_out'"
-                                :class="(status === 'idle' || status === 'checked_out') ? 'opacity-40 cursor-not-allowed grayscale' : 'bg-rose-500 hover:bg-rose-600 hover:scale-[1.02] shadow-xl shadow-rose-200'"
+                                :disabled="status !== 'checked_in' || !isLocalWifi"
+                                :class="(status !== 'checked_in' || !isLocalWifi) ? 'opacity-40 cursor-not-allowed grayscale' : 'bg-rose-500 hover:bg-rose-600 hover:scale-[1.02] shadow-xl shadow-rose-200'"
                                 class="flex-1 py-5 rounded-[25px] text-white font-black text-xl transition-all flex flex-col items-center justify-center gap-2 group">
                                 <svg class="w-8 h-8 group-hover:-rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                                 CHECK OUT
@@ -72,10 +108,15 @@
 
                         <div class="mt-8 pt-6 border-t border-emerald-800">
                             <template x-if="status === 'checked_in'">
-                                <span class="flex items-center gap-2 text-xs font-bold text-emerald-400 animate-pulse">
-                                    <span class="w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_8px_#34d399]"></span>
-                                    SEDANG BERTUGAS
-                                </span>
+                                <div>
+                                    <span class="flex items-center gap-2 text-xs font-bold text-emerald-400 animate-pulse">
+                                        <span class="w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_8px_#34d399]"></span>
+                                        SEDANG BERTUGAS
+                                    </span>
+                                    @if($presensi && $presensi->status === 'Hadir (Terlambat)')
+                                        <span class="text-[10px] text-rose-400 font-bold block mt-1 uppercase tracking-tighter italic">* Hadir (Terlambat)</span>
+                                    @endif
+                                </div>
                             </template>
                             <template x-if="status === 'idle'">
                                 <span class="flex items-center gap-2 text-xs font-bold text-gray-400">
@@ -104,94 +145,185 @@
 
     <script>
     function attendanceApp() {
-        return {
-            currentTime: '',
-            currentDate: '',
-            status: 'idle', 
-            checkInTime: null,
-            checkInTimeDisplay: '',
-            workDurationDisplay: '0j 0m 0s',
+    return {
+        currentTime: '',
+        currentDate: '',
+        isLocalWifi: {{ $isLocalWifi ? 'true' : 'false' }},
+        isInShiftTime: {{ $isInShiftTime ? 'true' : 'false' }},
+        status: "{{ $presensi ? ($presensi->jam_pulang ? 'checked_out' : 'checked_in') : 'idle' }}", 
+        checkInTime: null,
+        checkInTimeDisplay: "{{ $presensi ? date('H:i', strtotime($presensi->jam_masuk)) : '' }}",
+        workDurationDisplay: '0j 0m 0s',
 
-            init() {
-                this.updateTime();
-                setInterval(() => this.updateTime(), 1000);
+        init() {
+            this.updateTime();
+            setInterval(() => this.updateTime(), 1000);
 
-                const savedCheckIn = localStorage.getItem('rsu_checkin_time');
-                const savedStatus = localStorage.getItem('rsu_attendance_status');
+            const jamMasukServer = "{{ $presensi ? $presensi->jam_masuk : '' }}";
+            const tanggalAbsen = "{{ $presensi ? $presensi->tanggal : '' }}";
 
-                if (savedCheckIn && savedStatus === 'checked_in') {
-                    this.checkInTime = new Date(savedCheckIn);
-                    this.checkInTimeDisplay = this.checkInTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                    this.status = 'checked_in';
-                }
-            },
-
-            updateTime() {
-                const now = new Date();
-                this.currentTime = now.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                this.currentDate = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-                
-                if (this.status === 'checked_in') {
-                    this.updateDuration();
-                }
-            },
-
-            checkIn() {
-                this.checkInTime = new Date();
-                this.checkInTimeDisplay = this.checkInTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                this.status = 'checked_in';
-                
-                localStorage.setItem('rsu_checkin_time', this.checkInTime);
-                localStorage.setItem('rsu_attendance_status', 'checked_in');
-
-                Swal.fire({
-                    title: 'Check-In Berhasil!',
-                    text: 'Selamat bertugas! Tetap jaga kesehatan dan semangat melayani.',
-                    icon: 'success',
-                    confirmButtonColor: '#059669',
-                    customClass: { popup: 'rounded-[30px]' }
-                });
-            },
-
-            checkOut() {
-                Swal.fire({
-                    title: 'Selesai Bertugas?',
-                    text: "Pastikan semua tugas hari ini telah diselesaikan.",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#10b981',
-                    cancelButtonColor: '#ef4444',
-                    confirmButtonText: 'Ya, Selesai',
-                    cancelButtonText: 'Batal',
-                    customClass: { popup: 'rounded-[30px]' }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        this.status = 'checked_out';
-                        this.workDurationDisplay = '0j 0m 0s';
-                        this.checkInTimeDisplay = '';
-                        localStorage.removeItem('rsu_checkin_time');
-                        localStorage.setItem('rsu_attendance_status', 'checked_out');
-                        
-                        Swal.fire({
-                            title: 'Terima Kasih!',
-                            text: 'Sampai jumpa di shift berikutnya.',
-                            icon: 'success',
-                            confirmButtonColor: '#059669',
-                            customClass: { popup: 'rounded-[30px]' }
-                        });
-                    }
-                });
-            },
-
-            updateDuration() {
-                if (!this.checkInTime) return;
-                const diff = new Date() - this.checkInTime;
-                const hours = Math.floor(diff / 3600000);
-                const minutes = Math.floor((diff % 3600000) / 60000);
-                const seconds = Math.floor((diff % 60000) / 1000);
-                this.workDurationDisplay = `${hours}j ${minutes}m ${seconds}s`;
+            if (this.status === 'checked_in' && jamMasukServer && tanggalAbsen) {
+                this.checkInTime = new Date(tanggalAbsen.replace(/-/g, '/') + ' ' + jamMasukServer);
             }
+        },
+
+        updateTime() {
+            const now = new Date();
+            this.currentTime = now.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            this.currentDate = now.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            if (this.status === 'checked_in') {
+                this.updateDuration();
+            } else {
+                this.workDurationDisplay = '0j 0m 0s';
+            }
+        },
+
+        async checkIn() {
+            if (!this.isLocalWifi || !this.isInShiftTime) {
+                Swal.fire('Akses Ditolak', 'Pastikan Anda terhubung ke Wi-Fi RS dan berada pada waktu shift.', 'error');
+                return;
+            }
+
+            if (!navigator.geolocation) {
+                Swal.fire('Error', 'Browser Anda tidak mendukung fitur lokasi.', 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Mendeteksi Lokasi...',
+                text: 'Mohon tunggu sejenak.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    try {
+                        const res = await fetch("{{ route('kehadiran.checkin') }}", {
+                            method: "POST",
+                            headers: {
+                                "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                                "Content-Type": "application/json",
+                                "Accept": "application/json"
+                            },
+                            body: JSON.stringify({
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            })
+                        });
+
+                        const data = await res.json();
+                        Swal.close();
+
+                        if (res.ok) {
+                            Swal.fire({
+                                title: 'Berhasil!',
+                                text: data.message,
+                                icon: 'success',
+                                confirmButtonColor: '#059669'
+                            }).then(() => {
+                                window.location.href = "{{ route('kehadiran') }}";
+                            });
+                        } else {
+                            Swal.fire('Informasi', data.message, 'info');
+                        }
+                    } catch (error) {
+                        Swal.close();
+                        Swal.fire('Error', 'Gagal menghubungi server.', 'error');
+                    }
+                },
+                (error) => {
+                    Swal.close();
+                    let msg = 'Gagal mendeteksi lokasi.';
+                    if (error.code === 1) msg = 'Izin lokasi ditolak. Mohon aktifkan izin GPS di browser.';
+                    Swal.fire('GPS Bermasalah', msg, 'warning');
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        },
+
+        async checkOut() {
+            if (!this.isLocalWifi) {
+                Swal.fire('Akses Ditolak', 'Harus terhubung ke Wi-Fi RS.', 'error');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Selesai Bertugas?',
+                text: "Pastikan laporan sudah diperbarui.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Ya, Selesai',
+                cancelButtonText: 'Batal'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Mendeteksi Lokasi...',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            try {
+                                const res = await fetch("{{ route('kehadiran.checkout') }}", {
+                                    method: "POST",
+                                    headers: {
+                                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                                        "Content-Type": "application/json",
+                                        "Accept": "application/json"
+                                    },
+                                    body: JSON.stringify({
+                                        lat: position.coords.latitude,
+                                        lng: position.coords.longitude
+                                    })
+                                });
+
+                                const data = await res.json();
+                                Swal.close();
+
+                                if (res.ok) {
+                                    Swal.fire({
+                                        title: 'Terima Kasih!',
+                                        text: data.message,
+                                        icon: 'success',
+                                        confirmButtonColor: '#059669'
+                                    }).then(() => {
+                                        window.location.href = "{{ route('kehadiran') }}";
+                                    });
+                                } else {
+                                    Swal.fire('Gagal', data.message, 'error');
+                                }
+                            } catch (error) {
+                                Swal.close();
+                                Swal.fire('Error', 'Gagal menghubungi server.', 'error');
+                            }
+                        },
+                        (error) => {
+                            Swal.close();
+                            Swal.fire('GPS Bermasalah', 'Gagal mendeteksi lokasi untuk check-out.', 'warning');
+                        }
+                    );
+                }
+            });
+        },
+
+        updateDuration() {
+            if (!this.checkInTime) return;
+            const now = new Date();
+            const diff = now - this.checkInTime;
+            
+            if (diff < 0) return;
+
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            this.workDurationDisplay = `${hours}j ${minutes}m ${seconds}s`;
         }
     }
+}
     </script>
 </x-app-layout>

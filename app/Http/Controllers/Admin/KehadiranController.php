@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Kehadiran;
 use App\Models\User;
 use App\Models\Shift;
+use App\Models\Jadwal; // Tambahkan ini
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -26,6 +27,7 @@ class KehadiranController extends Controller
         }
 
         $kehadirans = $query->orderBy('tanggal', 'desc')->paginate(10);
+        $kehadirans = $query->paginate(10)->withQueryString();
         
         $users = User::where('is_admin', false)->get();
         $shifts = Shift::all(); 
@@ -44,12 +46,22 @@ class KehadiranController extends Controller
             'lokasi_masuk' => 'nullable',
         ]);
 
+        // LOGIKA PENGECEKAN JADWAL OTOMATIS
+        // Cek apakah user memiliki jadwal di tanggal tersebut
+        $jadwal = Jadwal::where('user_id', $request->user_id)
+                        ->whereDate('tanggal', $request->tanggal)
+                        ->first();
+
+        // Jika ada jadwal, paksa shift_id mengikuti jadwal agar data sinkron
+        if ($jadwal) {
+            $request->merge(['shift_id' => $jadwal->shift_id]);
+        }
+
         $data = $request->all();
         
         // Logika Otomatis Terlambat (Toleransi 1 Jam)
         $shift = Shift::find($request->shift_id);
         if ($shift && ($request->status == 'Hadir' || $request->status == 'Hadir (Terlambat)')) {
-            // Gunakan parse() agar lebih fleksibel terhadap format HH:mm maupun HH:mm:ss
             $jamMasukShift = Carbon::parse($shift->jam_masuk);
             $batasTerlambat = $jamMasukShift->copy()->addHours(1);
             $jamInputUser = Carbon::parse($request->jam_masuk);
@@ -61,7 +73,7 @@ class KehadiranController extends Controller
             }
         }
 
-        // Tangkap IP Publik yang sedang terhubung (WiFi/Seluler)
+        // Tangkap IP Publik yang sedang terhubung
         $currentIp = $request->ip();
         $data['ip_address_masuk'] = $currentIp;
         
@@ -82,7 +94,6 @@ class KehadiranController extends Controller
         // Logika Otomatis Terlambat saat Edit (Toleransi 1 Jam)
         $shift = Shift::find($kehadiran->shift_id);
         if ($shift && ($status == 'Hadir' || $status == 'Hadir (Terlambat)')) {
-            // Gunakan parse() untuk menghindari error Trailing Data
             $jamMasukShift = Carbon::parse($shift->jam_masuk);
             $batasTerlambat = $jamMasukShift->copy()->addHours(1);
             $jamInputUser = Carbon::parse($request->jam_masuk);
@@ -102,12 +113,10 @@ class KehadiranController extends Controller
             'lokasi_pulang' => $request->lokasi_pulang,
         ];
 
-        // Audit IP: Update IP masuk jika sebelumnya kosong (untuk data lama)
         if (empty($kehadiran->ip_address_masuk)) {
             $updateData['ip_address_masuk'] = $currentIp;
         }
 
-        // Audit IP: Catat IP pulang hanya jika jam pulang baru diisi
         if (empty($kehadiran->ip_address_pulang) && $request->filled('jam_pulang')) {
             $updateData['ip_address_pulang'] = $currentIp;
         }

@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany; // Tambahkan ini
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -79,5 +80,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
+    }
+
+    /**
+     * Relasi ke Tabel Jadwal (One-to-Many).
+     * Tambahkan ini untuk plotting jadwal bulanan
+     */
+    public function jadwals(): HasMany
+    {
+        return $this->hasMany(Jadwal::class);
     }
 }

@@ -43,19 +43,19 @@
                     <h1 class="text-3xl font-black text-gray-800 mt-2">Ringkasan Presensi</h1>
                 </div>
                 <div class="flex gap-3 bg-white/50 backdrop-blur-md p-2 rounded-2xl shadow-sm border border-white">
-                    <button class="flex items-center gap-2 px-4 py-2 bg-white text-red-600 rounded-xl text-xs font-bold shadow-sm hover:bg-red-50 transition border border-red-100">
+                    <a href="{{ route('presensi.pdf') }}" class="flex items-center gap-2 px-4 py-2 bg-white text-red-600 rounded-xl text-xs font-bold shadow-sm hover:bg-red-50 transition border border-red-100">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z"/></svg> PDF Report
-                    </button>
-                    <button class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition">
+                    </a>
+                    <a href="{{ route('presensi.csv') }}" class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> Export CSV
-                    </button>
+                    </a>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" 
                  x-data="{ 
-                    monthlyRate: 92, 
-                    yearlyRate: 45,
+                    monthlyRate: {{ $monthlyRate }}, 
+                    yearlyRate: {{ $yearlyRate }},
                     getColor(rate) {
                         if (rate <= 50) return 'bg-red-50 border-red-100 text-red-600';
                         if (rate <= 70) return 'bg-amber-50 border-amber-100 text-amber-600';
@@ -73,7 +73,10 @@
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-tighter">Status Hari Ini</p>
-                    <p class="text-xl font-black text-emerald-600">Hadir <span class="text-[10px] font-normal text-gray-400">07:12 WIB</span></p>
+                    <p class="text-xl font-black text-emerald-600">
+                        {{ $presensiHariIni ? $presensiHariIni->status : 'Belum Hadir' }} 
+                        <span class="text-[10px] font-normal text-gray-400">{{ $presensiHariIni ? $presensiHariIni->jam_masuk : '--:--' }} WIB</span>
+                    </p>
                 </div>
 
                 <div :class="getColor(monthlyRate)" class="p-6 rounded-3xl border shadow-xl transition-all duration-500">
@@ -98,7 +101,10 @@
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002-2z"></path></svg>
                     </div>
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-tighter">Total Izin/Sakit</p>
-                    <p class="text-xl font-black text-gray-800">3 Hari <span class="text-[10px] font-normal text-gray-400">Tahun Ini</span></p>
+                    <p class="text-xl font-black text-gray-800">
+                        {{ $totalIzinSakit }} Hari 
+                        <span class="text-[10px] font-normal text-gray-400">Tahun Ini</span>
+                    </p>
                 </div>
             </div>
 
@@ -110,9 +116,9 @@
                             <p class="text-xs text-gray-500">Monitor waktu kerja produktif Anda</p>
                         </div>
                         <select id="timeFilter" class="bg-emerald-50 border-none rounded-2xl text-xs font-bold text-emerald-700 focus:ring-emerald-500 cursor-pointer transition-all hover:bg-emerald-100">
-                            <option value="weekly">Mingguan</option>
-                            <option value="monthly">Bulanan</option>
-                            <option value="yearly">Tahunan</option>
+                            <option value="weekly">Mingguan (7 Hari Terakhir)</option>
+                            <option value="monthly" selected>Bulanan (6 Bln Terakhir)</option>
+                            <option value="yearly">Tahunan (3 Thn Terakhir)</option>
                         </select>
                     </div>
                     <div class="relative h-[300px]">
@@ -126,30 +132,28 @@
                     </div>
                     <h3 class="font-black text-lg mb-6 uppercase tracking-widest border-b border-emerald-800 pb-4">Log Terakhir</h3>
                     <div class="space-y-8">
+                        @forelse($logs as $log)
                         <div class="flex gap-4">
                             <div class="relative">
-                                <div class="w-3 h-3 bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.8)]"></div>
+                                <div class="w-3 h-3 {{ $loop->first ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.8)]' : 'bg-white/20' }} rounded-full"></div>
+                                @if(!$loop->last)
                                 <div class="absolute top-3 left-1.5 w-[1px] h-10 bg-emerald-700"></div>
+                                @endif
                             </div>
                             <div>
-                                <p class="text-xs font-bold text-emerald-300 uppercase tracking-tighter">Hari Ini</p>
-                                <p class="text-sm font-bold">Check-in Pagi</p>
-                                <p class="text-[10px] text-emerald-400">07:12 WIB - On Time</p>
+                                <p class="text-xs font-bold text-emerald-300 uppercase tracking-tighter">{{ \Carbon\Carbon::parse($log->tanggal)->isoFormat('dddd') }}</p>
+                                <p class="text-sm font-bold">{{ $log->status }}</p>
+                                <p class="text-[10px] text-emerald-400">{{ $log->jam_masuk ?? '--:--' }} WIB</p>
                             </div>
                         </div>
-                        <div class="flex gap-4">
-                            <div class="w-3 h-3 bg-white/20 rounded-full"></div>
-                            <div>
-                                <p class="text-xs font-bold text-emerald-300 uppercase tracking-tighter">Kemarin</p>
-                                <p class="text-sm font-bold">Check-out Sore</p>
-                                <p class="text-[10px] text-emerald-400">16:05 WIB</p>
-                            </div>
-                        </div>
+                        @empty
+                        <p class="text-xs text-emerald-400">Belum ada riwayat aktivitas.</p>
+                        @endforelse
                     </div>
                     
-                    <button class="w-full mt-10 py-3 bg-white text-emerald-900 rounded-2xl font-black text-xs uppercase transition hover:bg-emerald-100">
+                    <a href="/riwayat" class="block text-center w-full mt-10 py-3 bg-white text-emerald-900 rounded-2xl font-black text-xs uppercase transition hover:bg-emerald-100">
                         Lihat Semua Riwayat
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -157,60 +161,51 @@
 
     <script>
         const ctx = document.getElementById('attendanceChart').getContext('2d');
-        let currentChart;
+        const allChartData = @json($chartData);
 
-        const chartData = {
-            weekly: {
-                labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'],
-                data: [480, 490, 450, 480, 500, 460]
+        // Inisialisasi Chart (Default: Monthly)
+        const currentChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: allChartData.monthly.labels,
+                datasets: [{
+                    data: allChartData.monthly.data,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 4,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 6,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#10b981',
+                    pointBorderWidth: 3
+                }]
             },
-            monthly: {
-                labels: ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4'],
-                data: [2400, 2550, 2300, 2600]
-            },
-            yearly: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-                data: [10000, 11000, 9500, 10500, 12000, 11500]
-            }
-        };
-
-        function renderChart(type) {
-            if (currentChart) currentChart.destroy();
-            
-            currentChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: chartData[type].labels,
-                    datasets: [{
-                        data: chartData[type].data,
-                        borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                        borderWidth: 4,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 6,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#10b981',
-                        pointBorderWidth: 3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: { beginAtZero: false, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } },
-                        x: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' } } }
-                    }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: 'rgba(0,0,0,0.05)' }, 
+                        ticks: { font: { size: 10 }, stepSize: 1 } 
+                    },
+                    x: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' } } }
                 }
-            });
-        }
-
-        document.getElementById('timeFilter').addEventListener('change', (e) => {
-            renderChart(e.target.value);
+            }
         });
 
-        // Initialize
-        renderChart('weekly');
+        // Logika Pergantian Data via Filter
+        document.getElementById('timeFilter').addEventListener('change', function() {
+            const selected = this.value; // weekly, monthly, atau yearly
+            const newData = allChartData[selected];
+
+            currentChart.data.labels = newData.labels;
+            currentChart.data.datasets[0].data = newData.data;
+            
+            // Animasi update grafik
+            currentChart.update();
+        });
     </script>
 </x-app-layout>

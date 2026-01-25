@@ -233,7 +233,7 @@
                             <div>
                                 <label class="block text-[10px] font-black text-emerald-700 uppercase mb-1">Jenis</label>
                                 <select name="jenis_pengajuan" class="w-full bg-emerald-50 border-none rounded-xl text-sm focus:ring-emerald-500">
-                                    <option>Cuti</option>
+                                    <option>Cuti / Tukar Shift</option>
                                     <option>Sakit</option>
                                     <option>Izin</option>
                                 </select>
@@ -277,7 +277,7 @@
                             <div>
                                 <label class="block text-[10px] font-black text-emerald-700 uppercase mb-1">Jenis</label>
                                 <select name="jenis_pengajuan" x-model="editData.jenis" class="w-full bg-emerald-50 border-none rounded-xl text-sm focus:ring-emerald-500">
-                                    <option>Cuti</option>
+                                    <option>Cuti / Tukar Shift</option>
                                     <option>Sakit</option>
                                     <option>Izin</option>
                                 </select>

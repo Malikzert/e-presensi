@@ -190,6 +190,36 @@
                         @endforelse
                     </tbody>
                 </table>
+                <div class="px-8 py-6 bg-emerald-50/30 border-t border-emerald-100">
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <p class="text-[10px] font-black uppercase text-emerald-700 tracking-widest">
+                            Menampilkan {{ $kehadirans->firstItem() }} - {{ $kehadirans->lastItem() }} 
+                            dari {{ $kehadirans->total() }} data
+                        </p>
+                        
+                        <div class="flex items-center gap-2">
+                            {{-- Tombol Sebelumnya --}}
+                            @if ($kehadirans->onFirstPage())
+                                <span class="px-4 py-2 bg-gray-100 text-gray-400 rounded-xl text-[10px] font-black uppercase cursor-not-allowed">Prev</span>
+                            @else
+                                <a href="{{ $kehadirans->previousPageUrl() }}" class="px-4 py-2 bg-white border border-emerald-200 text-emerald-700 rounded-xl text-[10px] font-black uppercase hover:bg-emerald-600 hover:text-white transition-all">Prev</a>
+                            @endif
+
+                            {{-- Nomor Halaman (Simple) --}}
+                            <span class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black">
+                                {{ $kehadirans->currentPage() }}
+                            </span>
+
+                            {{-- Tombol Selanjutnya --}}
+                            @if ($kehadirans->hasMorePages())
+                                <a href="{{ $kehadirans->nextPageUrl() }}" class="px-4 py-2 bg-white border border-emerald-200 text-emerald-700 rounded-xl text-[10px] font-black uppercase hover:bg-emerald-600 hover:text-white transition-all">Next</a>
+                            @else
+                                <span class="px-4 py-2 bg-gray-100 text-gray-400 rounded-xl text-[10px] font-black uppercase cursor-not-allowed">Next</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                </div> {{-- Penutup Container Utama --}}
             </div>
         </div>
 
