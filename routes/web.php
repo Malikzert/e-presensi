@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\KehadiranController;
 use App\Http\Controllers\Admin\PengajuanController;
 use App\Http\Controllers\Admin\JadwalController;
+use App\Http\Controllers\Admin\UJController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\UserSettingController;
 use App\Http\Controllers\PengajuanUserController;
@@ -75,8 +76,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/karyawans', [KaryawanController::class, 'store'])->name('karyawans.store');
     Route::put('/karyawans/{user}', [KaryawanController::class, 'update'])->name('karyawans.update'); 
     Route::delete('/karyawans/{user}', [KaryawanController::class, 'destroy'])->name('karyawans.destroy');
-    Route::post('/jabatans', [KaryawanController::class, 'storeJabatan'])->name('jabatans.store');
-    Route::post('/units', [KaryawanController::class, 'storeUnit'])->name('units.store');
+    Route::get('/UnitJabatan', [UJController::class, 'index'])->name('UnitJabatan');
+
+    Route::post('/jabatans', [UJController::class, 'storeJabatan'])->name('jabatans.store');
+    Route::put('/jabatans/{id}', [UJController::class, 'updateJabatan'])->name('jabatans.update');
+    Route::delete('/jabatans/{id}', [UJController::class, 'destroyJabatan'])->name('jabatans.destroy');
+
+    Route::post('/units', [UJController::class, 'storeUnit'])->name('units.store');
+    Route::put('/units/{id}', [UJController::class, 'updateUnit'])->name('units.update');
+    Route::delete('/units/{id}', [UJController::class, 'destroyUnit'])->name('units.destroy');
 
     // Kehadiran (Admin Side)
     Route::get('/kehadirans', [KehadiranController::class, 'index'])->name('kehadirans');
