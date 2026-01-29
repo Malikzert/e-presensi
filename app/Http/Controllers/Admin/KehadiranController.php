@@ -6,9 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Kehadiran;
 use App\Models\User;
 use App\Models\Shift;
-use App\Models\Jadwal; // Tambahkan ini
+use App\Models\Jadwal;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
 
 class KehadiranController extends Controller
 {
@@ -26,8 +27,8 @@ class KehadiranController extends Controller
             $query->whereDate('tanggal', $request->date);
         }
 
-        $kehadirans = $query->orderBy('tanggal', 'desc')->paginate(10);
-        $kehadirans = $query->paginate(10)->withQueryString();
+        // Memperbaiki pagination agar tidak double call
+        $kehadirans = $query->orderBy('tanggal', 'desc')->paginate(10)->withQueryString();
         
         $users = User::where('is_admin', false)->get();
         $shifts = Shift::all(); 
@@ -46,34 +47,31 @@ class KehadiranController extends Controller
             'lokasi_masuk' => 'nullable',
         ]);
 
-        // LOGIKA PENGECEKAN JADWAL OTOMATIS
-        // Cek apakah user memiliki jadwal di tanggal tersebut
         $jadwal = Jadwal::where('user_id', $request->user_id)
                         ->whereDate('tanggal', $request->tanggal)
                         ->first();
 
-        // Jika ada jadwal, paksa shift_id mengikuti jadwal agar data sinkron
         if ($jadwal) {
             $request->merge(['shift_id' => $jadwal->shift_id]);
         }
 
         $data = $request->all();
         
-        // Logika Otomatis Terlambat (Toleransi 1 Jam)
+        // --- LOGIKA TOLERANSI 15 MENIT ---
         $shift = Shift::find($request->shift_id);
-        if ($shift && ($request->status == 'Hadir' || $request->status == 'Hadir (Terlambat)')) {
-            $jamMasukShift = Carbon::parse($shift->jam_masuk);
-            $batasTerlambat = $jamMasukShift->copy()->addHours(1);
-            $jamInputUser = Carbon::parse($request->jam_masuk);
+        if ($shift && in_array($request->status, ['Hadir', 'Hadir (Terlambat)', 'hadir'])) {
+            $jamMasukShift = Carbon::parse($request->tanggal . ' ' . $shift->jam_masuk);
+            $batasTerlambat = $jamMasukShift->copy()->addMinutes(15);
+            $jamInputUser = Carbon::parse($request->tanggal . ' ' . $request->jam_masuk);
 
+            // Jika jam input LEBIH BESAR (gt) dari batas toleransi (21:15), maka Terlambat
             if ($jamInputUser->gt($batasTerlambat)) {
                 $data['status'] = 'Hadir (Terlambat)';
             } else {
-                $data['status'] = 'Hadir';
+                $data['status'] = 'hadir'; 
             }
         }
 
-        // Tangkap IP Publik yang sedang terhubung
         $currentIp = $request->ip();
         $data['ip_address_masuk'] = $currentIp;
         
@@ -91,17 +89,17 @@ class KehadiranController extends Controller
         $status = $request->status;
         $currentIp = $request->ip();
 
-        // Logika Otomatis Terlambat saat Edit (Toleransi 1 Jam)
+        // --- LOGIKA TOLERANSI 15 MENIT SAAT UPDATE ---
         $shift = Shift::find($kehadiran->shift_id);
-        if ($shift && ($status == 'Hadir' || $status == 'Hadir (Terlambat)')) {
-            $jamMasukShift = Carbon::parse($shift->jam_masuk);
-            $batasTerlambat = $jamMasukShift->copy()->addHours(1);
-            $jamInputUser = Carbon::parse($request->jam_masuk);
+        if ($shift && in_array($status, ['Hadir', 'Hadir (Terlambat)', 'hadir'])) {
+            $jamMasukShift = Carbon::parse($kehadiran->tanggal . ' ' . $shift->jam_masuk);
+            $batasTerlambat = $jamMasukShift->copy()->addMinutes(15);
+            $jamInputUser = Carbon::parse($kehadiran->tanggal . ' ' . $request->jam_masuk);
 
             if ($jamInputUser->gt($batasTerlambat)) {
                 $status = 'Hadir (Terlambat)';
             } else {
-                $status = 'Hadir';
+                $status = 'hadir';
             }
         }
         

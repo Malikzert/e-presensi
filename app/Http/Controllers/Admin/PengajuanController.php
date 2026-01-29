@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\File;
 use App\Exports\PengajuanExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Notifications\StatusPengajuanNotification;
 
 class PengajuanController extends Controller
 {
@@ -18,7 +19,6 @@ class PengajuanController extends Controller
         $query = Pengajuan::with('user');
 
         // Filter Pencarian Nama
-
         if ($request->has('search')) {
             $search = $request->search;
             $query->where('kode_pengajuan', 'LIKE', "%{$search}%")
@@ -41,53 +41,69 @@ class PengajuanController extends Controller
     }
 
     /**
-     * Fitur Tambah Pengajuan oleh Admin (CRUD - Create)
+     * Fitur Tambah Pengajuan oleh Admin
      */
     public function store(Request $request)
     {
         $request->validate([
             'user_id' => 'required|exists:users,id',
-            'jenis_pengajuan' => 'required|in:Cuti,Sakit,Izin',
+            'jenis_pengajuan' => 'required', 
             'tgl_mulai' => 'required|date',
             'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',
             'alasan' => 'required|string',
-            'bukti' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120', // Validasi 5MB
+            'bukti' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
-        $nama_file = null;
-        if ($request->hasFile('bukti')) {
-            $file = $request->file('bukti');
-            $nama_file = time() . '_' . $file->getClientOriginalName();
-            
-            // Pastikan direktori ada
-            $tujuan_upload = public_path('uploads/bukti');
-            if (!File::isDirectory($tujuan_upload)) {
-                File::makeDirectory($tujuan_upload, 0777, true, true);
+        try {
+            $nama_file = null;
+            if ($request->hasFile('bukti')) {
+                $file = $request->file('bukti');
+                $nama_file = time() . '_' . $file->getClientOriginalName();
+                $tujuan_upload = public_path('uploads/bukti');
+                if (!File::isDirectory($tujuan_upload)) {
+                    File::makeDirectory($tujuan_upload, 0777, true, true);
+                }
+                $file->move($tujuan_upload, $nama_file);
             }
-            
-            $file->move($tujuan_upload, $nama_file);
+
+            // LOGIKA BARU: Ambil hanya kata pertama (Cuti, Sakit, atau Izin)
+            // Ini untuk menangani jika input berisi "Cuti / tukar shift"
+            $inputUser = trim($request->jenis_pengajuan);
+            $jenis = 'Izin'; // Default jika tidak cocok
+
+            if (stripos($inputUser, 'Cuti') !== false) {
+                $jenis = 'Cuti';
+            } elseif (stripos($inputUser, 'Sakit') !== false) {
+                $jenis = 'Sakit';
+            } elseif (stripos($inputUser, 'Izin') !== false) {
+                $jenis = 'Izin';
+            }
+
+            Pengajuan::create([
+                'user_id' => $request->user_id,
+                'jenis_pengajuan' => $jenis, // Sekarang hanya berisi 'Cuti', 'Sakit', atau 'Izin'
+                'tgl_mulai' => $request->tgl_mulai,
+                'tgl_selesai' => $request->tgl_selesai,
+                'alasan' => $request->alasan,
+                'bukti' => $nama_file,
+                'status' => 'Pending',
+                'kode_pengajuan' => 'PNANC-' . time(), // Sesuaikan dengan cara Anda generate kode
+            ]);
+
+            return back()->with('success', 'Pengajuan berhasil ditambahkan.');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menyimpan data: ' . $e->getMessage());
         }
-
-        Pengajuan::create([
-            'user_id' => $request->user_id,
-            'jenis_pengajuan' => $request->jenis_pengajuan,
-            'tgl_mulai' => $request->tgl_mulai,
-            'tgl_selesai' => $request->tgl_selesai,
-            'alasan' => $request->alasan,
-            'bukti' => $nama_file,
-            'status' => 'Pending',
-        ]);
-
-        return back()->with('success', 'Pengajuan baru berhasil ditambahkan.');
     }
 
     /**
-     * Fitur Update Data Pengajuan (CRUD - Update)
+     * Fitur Update Data Pengajuan
      */
     public function update(Request $request, $id)
     {
         $request->validate([
-            'jenis_pengajuan' => 'required|in:Cuti,Sakit,Izin',
+            'jenis_pengajuan' => 'required',
             'tgl_mulai' => 'required|date',
             'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',
             'alasan' => 'required|string',
@@ -95,10 +111,16 @@ class PengajuanController extends Controller
         ]);
 
         $pengajuan = Pengajuan::findOrFail($id);
-        $data = $request->only(['jenis_pengajuan', 'tgl_mulai', 'tgl_selesai', 'alasan']);
+        $jenis_formatted = ucfirst(strtolower(trim($request->jenis_pengajuan)));
+        
+        $data = [
+            'jenis_pengajuan' => $jenis_formatted,
+            'tgl_mulai' => $request->tgl_mulai,
+            'tgl_selesai' => $request->tgl_selesai,
+            'alasan' => $request->alasan,
+        ];
 
         if ($request->hasFile('bukti')) {
-            // Hapus file lama jika ada
             if ($pengajuan->bukti && File::exists(public_path('uploads/bukti/' . $pengajuan->bukti))) {
                 File::delete(public_path('uploads/bukti/' . $pengajuan->bukti));
             }
@@ -114,8 +136,9 @@ class PengajuanController extends Controller
         return back()->with('success', 'Data pengajuan berhasil diperbarui.');
     }
 
-        // app/Http/Controllers/Admin/PengajuanController.php
-
+    /**
+     * Fitur Update Status & Potong Kuota (Mendukung Cuti, Izin, Sakit)
+     */
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
@@ -123,63 +146,71 @@ class PengajuanController extends Controller
         ]);
         
         $pengajuan = Pengajuan::findOrFail($id);
-        
-        // Ambil User langsung dari Database berdasarkan user_id di pengajuan
         $user = User::find($pengajuan->user_id); 
-        // dd($pengajuan->user_id, $user->id, $user->kuota_cuti);
+        
         if (!$user) {
             return back()->with('error', 'User tidak ditemukan.');
         }
 
-        // Jika status berubah jadi Disetujui
+        $mulai = Carbon::parse($pengajuan->tgl_mulai)->startOfDay();
+        $selesai = Carbon::parse($pengajuan->tgl_selesai)->startOfDay();
+        $durasi = $mulai->diffInDays($selesai) + 1;
+
+        // SEKARANG SAKIT JUGA MEMOTONG KUOTA
+        $jenisCek = strtolower(trim($pengajuan->jenis_pengajuan));
+        $isPotongKuota = in_array($jenisCek, ['cuti', 'izin', 'sakit']);
+
+        // LOGIKA 1: Jika status berubah menjadi Disetujui
         if ($request->status == 'Disetujui' && $pengajuan->status !== 'Disetujui') {
-            if ($pengajuan->jenis_pengajuan == 'Cuti') {
-                
-                // Hitung durasi menggunakan objek Carbon dari model (karena sudah di-cast)
-                $durasi = $pengajuan->tgl_mulai->diffInDays($pengajuan->tgl_selesai) + 1;
-
+            if ($isPotongKuota) {
                 if ($user->kuota_cuti < $durasi) {
-                    return back()->with('error', 'Kuota tidak cukup. Sisa: ' . $user->kuota_cuti);
+                    return back()->with('error', "Kuota tidak cukup. Butuh: $durasi, Sisa: $user->kuota_cuti");
                 }
-
-                // PERBAIKAN UTAMA: Update langsung ke DB menggunakan query builder agar pasti terpangkas
-                User::where('id', $user->id)->decrement('kuota_cuti', $durasi);
+                $user->decrement('kuota_cuti', $durasi);
             }
         }
 
-        // Jika dibatalkan (Disetujui ke Ditolak)
-        if ($request->status == 'Ditolak' && $pengajuan->status == 'Disetujui') {
-            if ($pengajuan->jenis_pengajuan == 'Cuti') {
-                $durasi = $pengajuan->tgl_mulai->diffInDays($pengajuan->tgl_selesai) + 1;
-                User::where('id', $user->id)->increment('kuota_cuti', $durasi);
+        // LOGIKA 2: Jika dibatalkan
+        if ($pengajuan->status == 'Disetujui' && ($request->status == 'Ditolak' || $request->status == 'Pending')) {
+            if ($isPotongKuota) {
+                $user->increment('kuota_cuti', $durasi);
             }
         }
 
         $pengajuan->update(['status' => $request->status]);
 
-        return back()->with('success', 'Status updated. Kuota ' . $user->name . ' sekarang: ' . $user->fresh()->kuota_cuti);
+        if ($user->notif_status_pengajuan == 1) {
+            $user->notify(new StatusPengajuanNotification($pengajuan));
+        }
+
+        $userUpdated = $user->fresh();
+        return back()->with('success', "Status updated. Durasi: $durasi hari. Kuota {$userUpdated->name} sekarang: {$userUpdated->kuota_cuti}");
     }
+
+    /**
+     * Fitur Hapus & Kembalikan Kuota (Mendukung Cuti, Izin, Sakit)
+     */
     public function destroy($id)
     {
         $pengajuan = Pengajuan::findOrFail($id);
+        $jenisCek = strtolower(trim($pengajuan->jenis_pengajuan));
     
-        // Pastikan relasi user ada sebelum increment
-        if ($pengajuan->status == 'Disetujui' && $pengajuan->jenis_pengajuan == 'Cuti' && $pengajuan->user) {
-            $mulai = Carbon::parse($pengajuan->tgl_mulai);
-            $selesai = Carbon::parse($pengajuan->tgl_selesai);
+        // Jika data disetujui dihapus, kembalikan kuota (Termasuk Sakit)
+        if ($pengajuan->status == 'Disetujui' && in_array($jenisCek, ['cuti', 'izin', 'sakit']) && $pengajuan->user) {
+            $mulai = Carbon::parse($pengajuan->tgl_mulai)->startOfDay();
+            $selesai = Carbon::parse($pengajuan->tgl_selesai)->startOfDay();
             $durasi = $mulai->diffInDays($selesai) + 1;
             $pengajuan->user->increment('kuota_cuti', $durasi);
         }
-        
 
-        // Hapus file fisik bukti saat data dihapus
         if ($pengajuan->bukti && File::exists(public_path('uploads/bukti/' . $pengajuan->bukti))) {
             File::delete(public_path('uploads/bukti/' . $pengajuan->bukti));
         }
 
         $pengajuan->delete();
-        return back()->with('success', 'Pengajuan dihapus.');
+        return back()->with('success', 'Pengajuan berhasil dihapus.');
     }
+
     public function export(Request $request) 
     {
         $request->validate([
@@ -188,7 +219,6 @@ class PengajuanController extends Controller
         ]);
 
         $nama_file = 'Rekap_Pengajuan_' . $request->bulan . '_' . $request->tahun . '.xlsx';
-        
         return Excel::download(new PengajuanExport($request->bulan, $request->tahun), $nama_file);
     }
 }

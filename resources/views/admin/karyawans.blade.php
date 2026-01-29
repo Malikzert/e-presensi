@@ -55,11 +55,19 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 @forelse($karyawans as $karyawan)
-                <div class="bg-white/80 backdrop-blur-md p-6 rounded-[35px] border border-emerald-100 shadow-xl relative overflow-hidden group hover:border-emerald-400 transition-all">
+                <div class="bg-white/80 backdrop-blur-md p-6 rounded-[35px] border {{ $karyawan->delete_requested_at ? 'border-rose-400' : 'border-emerald-100' }} shadow-xl relative overflow-hidden group hover:border-emerald-400 transition-all">
+                    
+                    {{-- Badge Indikator Minta Hapus --}}
+                    @if($karyawan->delete_requested_at)
+                        <div class="absolute top-0 right-0 bg-rose-500 text-white text-[9px] px-4 py-1.5 rounded-bl-2xl font-black animate-pulse z-10 shadow-lg">
+                            PERMINTAAN HAPUS AKUN
+                        </div>
+                    @endif
+
                     <div class="flex items-center gap-4">
                         <img src="{{ $karyawan->foto ? asset('images/users/'.$karyawan->foto) : asset('images/users/default.jpg') }}" 
-                             class="w-16 h-16 rounded-2xl shadow-md border-2 border-white object-cover" 
-                             onerror="this.src='{{ asset('images/users/default.jpg') }}'">
+                            class="w-16 h-16 rounded-2xl shadow-md border-2 border-white object-cover" 
+                            onerror="this.src='{{ asset('images/users/default.jpg') }}'">
                         
                         <div>
                             <h4 class="font-black text-gray-800">{{ $karyawan->name }}</h4>
@@ -77,23 +85,40 @@
                             <span>NIK: {{ $karyawan->nik ?? '-' }}</span>
                             <span class="text-emerald-700 font-mono">NP: {{ $karyawan->nopeg ?? '-' }}</span>
                         </div>
-                        <div class="flex gap-3">
-                            <button @click="openModal = true; editMode = true; currentKaryawan = {
-                                id: '{{ $karyawan->id }}',
-                                name: '{{ $karyawan->name }}',
-                                nik: '{{ $karyawan->nik }}',
-                                nopeg: '{{ $karyawan->nopeg }}',
-                                gender: '{{ $karyawan->gender }}',
-                                email: '{{ $karyawan->email }}',
-                                jabatan_id: '{{ $karyawan->jabatan_id }}',
-                                foto: '{{ $karyawan->foto }}',
-                                units: {{ $karyawan->units->pluck('id') }}
-                            }" 
-                            class="text-emerald-600 hover:text-emerald-800 transition-colors uppercase tracking-widest">Edit</button>
-                            
-                            <button type="button" 
-                                    @click="deleteModal = true; deleteAction = '{{ route('admin.karyawans.destroy', $karyawan->id) }}'" 
-                                    class="text-rose-600 hover:text-rose-800 transition-colors uppercase tracking-widest">Hapus</button>
+
+                        <div class="flex gap-2">
+                            @if($karyawan->delete_requested_at)
+                                {{-- TOMBOL KHUSUS PERSETUJUAN HAPUS --}}
+                                <form action="{{ route('admin.karyawans.handle-delete', $karyawan->id) }}" method="POST" class="inline">
+                                    @csrf
+                                    <input type="hidden" name="action" value="reject">
+                                    <button type="submit" class="bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl border border-emerald-200 hover:bg-emerald-100 transition-all font-black uppercase text-[8px]">Tolak</button>
+                                </form>
+
+                                <button type="button" 
+                                        @click="deleteModal = true; deleteAction = '{{ route('admin.karyawans.handle-delete', ['id' => $karyawan->id, 'action' => 'approve']) }}'"
+                                        class="bg-rose-600 text-white px-3 py-1.5 rounded-xl shadow-lg shadow-rose-200 hover:bg-rose-700 transition-all font-black uppercase text-[8px]">
+                                    Setujui Hapus
+                                </button>
+                            @else
+                                {{-- TOMBOL NORMAL EDIT & HAPUS --}}
+                                <button @click="openModal = true; editMode = true; currentKaryawan = {
+                                    id: '{{ $karyawan->id }}',
+                                    name: '{{ $karyawan->name }}',
+                                    nik: '{{ $karyawan->nik }}',
+                                    nopeg: '{{ $karyawan->nopeg }}',
+                                    gender: '{{ $karyawan->gender }}',
+                                    email: '{{ $karyawan->email }}',
+                                    jabatan_id: '{{ $karyawan->jabatan_id }}',
+                                    foto: '{{ $karyawan->foto }}',
+                                    units: {{ $karyawan->units->pluck('id') }}
+                                }" 
+                                class="text-emerald-600 hover:text-emerald-800 transition-colors uppercase tracking-widest">Edit</button>
+                                
+                                <button type="button" 
+                                        @click="deleteModal = true; deleteAction = '{{ route('admin.karyawans.destroy', $karyawan->id) }}'" 
+                                        class="text-rose-600 hover:text-rose-800 transition-colors uppercase tracking-widest">Hapus</button>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -241,21 +266,38 @@
         </div>
 
         <div x-show="deleteModal" x-cloak class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-rose-900/20 backdrop-blur-sm">
-            <div @click.away="deleteModal = false" class="bg-white rounded-[40px] p-8 w-full max-w-sm shadow-2xl border border-rose-100 text-center">
-                <div class="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                </div>
-                <h3 class="text-xl font-black text-gray-900 mb-2">Hapus Karyawan?</h3>
-                <p class="text-sm text-gray-500 mb-8">Tindakan ini tidak dapat dibatalkan.</p>
-                <div class="flex gap-3">
-                    <button type="button" @click="deleteModal = false" class="flex-1 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-all">Batal</button>
-                    <form :action="deleteAction" method="POST" class="flex-1">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="w-full py-3 bg-rose-600 text-white rounded-2xl font-black shadow-lg shadow-rose-200">Ya, Hapus</button>
-                    </form>
-                </div>
-            </div>
+    <div @click.away="deleteModal = false" class="bg-white rounded-[40px] p-8 w-full max-w-sm shadow-2xl border border-rose-100 text-center">
+        <div :class="deleteAction.includes('handle-delete') ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'" 
+             class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path x-show="!deleteAction.includes('handle-delete')" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                <path x-show="deleteAction.includes('handle-delete')" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
         </div>
+
+        <h3 class="text-xl font-black text-gray-900 mb-2" 
+            x-text="deleteAction.includes('handle-delete') ? 'Setujui Hapus?' : 'Hapus Karyawan?'"></h3>
+        
+        <p class="text-sm text-gray-500 mb-8" 
+           x-text="deleteAction.includes('handle-delete') ? 'Akun ini akan dihapus permanen sesuai permintaan user.' : 'Tindakan ini tidak dapat dibatalkan.'"></p>
+        
+        <div class="flex gap-3">
+            <button type="button" @click="deleteModal = false" class="flex-1 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-all">Batal</button>
+            
+            <form :action="deleteAction" method="POST" class="flex-1">
+                @csrf
+                <template x-if="!deleteAction.includes('handle-delete')">
+                    <input type="hidden" name="_method" value="DELETE">
+                </template>
+
+                <button type="submit" 
+                        :class="deleteAction.includes('handle-delete') ? 'bg-emerald-600 shadow-emerald-200' : 'bg-rose-600 shadow-rose-200'"
+                        class="w-full py-3 text-white rounded-2xl font-black shadow-lg transition-all"
+                        x-text="deleteAction.includes('handle-delete') ? 'Ya, Setujui' : 'Ya, Hapus'">
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
     </div>
 </x-app-layout>

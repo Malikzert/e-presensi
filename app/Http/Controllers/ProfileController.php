@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
-use Illuminate\Support\Facades\File; // Tambahkan ini untuk manajemen file
+use Illuminate\Support\Facades\File;
 
 class ProfileController extends Controller
 {
@@ -40,7 +40,7 @@ class ProfileController extends Controller
         if ($request->hasFile('foto')) {
             $file = $request->file('foto');
             
-            // Buat nama file unik: nik_timestamp.ekstensi (misal: 12345678_17045000.jpg)
+            // Buat nama file unik: nik_timestamp.ekstensi
             $fileName = ($user->nik ?? 'user') . '_' . time() . '.' . $file->getClientOriginalExtension();
             
             // Pindahkan ke folder public/images
@@ -65,10 +65,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Delete the user's account.
-     */
-    /**
-     * Update: Mengajukan penghapusan akun (bukan menghapus langsung).
+     * Update: Mengajukan penghapusan akun ke Admin/HRD.
      */
     public function destroy(Request $request): RedirectResponse
     {
@@ -81,18 +78,20 @@ class ProfileController extends Controller
         ]);
 
         $user = $request->user();
+
+        // 2. Update status dan catat waktu pengajuan
         $user->update([
-            'status' => 'pending_delete', // Status untuk diproses HRD
-            'delete_requested_at' => now(), // Mencatat kapan user mengajukan
+            'status' => 'pending_delete', 
+            'delete_requested_at' => now(), 
         ]);
 
-        // Setelah mengajukan, user dipaksa keluar (logout)
+        // 3. Proses Logout
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        // Arahkan ke halaman login dengan pesan informasi
-        return Redirect::to('/login')->with('status', 'Permohonan penghapusan akun Anda telah dikirim. Akun akan dinonaktifkan sementara menunggu persetujuan HRD.');
+        // 4. Kembali ke login dengan pesan notifikasi
+        return Redirect::to('/login')->with('info', 'Permohonan penghapusan akun berhasil dikirim. Akun Anda dinonaktifkan sementara menunggu persetujuan Admin.');
     }
 }

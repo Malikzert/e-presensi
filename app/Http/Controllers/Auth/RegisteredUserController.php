@@ -42,8 +42,6 @@ class RegisteredUserController extends Controller
             'nik' => $request->nik,
             'password' => Hash::make($request->password),
             'jabatan' => 'Default', // Default jabatan
-            'departemen_id' => 1,    // Default departemen
-            'shift_id' => 1,         // Default shift (bisa diubah nanti saat absen)
             'is_admin' => 0,
         ]);
 

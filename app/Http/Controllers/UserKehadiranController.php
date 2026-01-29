@@ -7,13 +7,32 @@ use App\Models\Kehadiran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+use App\Notifications\AbsensiNotification; 
 
 class UserKehadiranController extends Controller
 {
     // Koordinat RS Anna Medika
-    private $rsLat = -7.125506; 
-    private $rsLng = 112.724977;
+    private $rsLat = -7.0494833; 
+    private $rsLng = 112.7298311;
     private $maxRadius = 100; // Radius toleransi dalam meter
+
+    /**
+     * Helper untuk mengambil IP Publik via ipify.org
+     */
+    private function getPublicIp()
+    {
+        try {
+            // Timeout 5 detik agar tidak menghambat loading jika API lambat
+            $response = Http::timeout(5)->get('https://api.ipify.org?format=json');
+            if ($response->successful()) {
+                return $response->json()['ip'];
+            }
+        } catch (\Exception $e) {
+            return request()->ip(); // Fallback ke IP request biasa jika API gagal
+        }
+        return request()->ip();
+    }
 
     public function index(Request $request)
     {
@@ -22,8 +41,13 @@ class UserKehadiranController extends Controller
         $hariIni = $sekarang->toDateString();
         $kemarin = $sekarang->copy()->subDay()->toDateString();
 
-        $allowedIps = ['127.0.0.1', '::1', '192.168.1.1'];
-        $isLocalWifi = in_array($request->ip(), $allowedIps);
+        // Ambil IP Publik untuk validasi tampilan di index
+        $currentIp = $this->getPublicIp();
+        
+        // --- KONFIGURASI IP ---
+        // Ganti '114.125.xx.xx' dengan IP Publik Wifi RS yang Anda dapatkan dari Google
+        $allowedIps = ['127.0.0.1', '::1', '192.168.1.1', '114.125.xx.xx']; 
+        $isLocalWifi = in_array($currentIp, $allowedIps);
 
         $semuaJadwal = Jadwal::where('user_id', $user->id)
             ->whereIn('tanggal', [$hariIni, $kemarin])
@@ -50,14 +74,70 @@ class UserKehadiranController extends Controller
                 ->first();
         }
 
-        return view('kehadiran', compact('jadwal', 'jadwalInfo', 'presensi', 'isLocalWifi', 'isInShiftTime'));
+        $sudahAbsenMasuk = $presensi && $presensi->jam_masuk;
+        $sudahAbsenPulang = $presensi && $presensi->jam_pulang;
+        $sudahWaktunyaPulang = false;
+
+        if ($jadwalInfo && $jadwalInfo->shift) {
+            $waktuPulang = Carbon::parse($jadwalInfo->tanggal . ' ' . $jadwalInfo->shift->jam_pulang, 'Asia/Jakarta');
+            $waktuMasuk = Carbon::parse($jadwalInfo->tanggal . ' ' . $jadwalInfo->shift->jam_masuk, 'Asia/Jakarta');
+            if ($waktuPulang->lt($waktuMasuk)) { $waktuPulang->addDay(); }
+            $sudahWaktunyaPulang = $sekarang->greaterThanOrEqualTo($waktuPulang);
+        }
+
+        $perluAbsen = false;
+        $pesanNotif = null;
+
+        if ($jadwalInfo && $jadwalInfo->shift) {
+            if (!$sudahAbsenMasuk) {
+                $waktuMulaiAbsen = Carbon::parse($jadwalInfo->tanggal . ' ' . $jadwalInfo->shift->jam_masuk, 'Asia/Jakarta')->subMinutes(30);
+                if ($sekarang->greaterThanOrEqualTo($waktuMulaiAbsen) && !$sudahWaktunyaPulang) {
+                    $perluAbsen = true;
+                    $pesanNotif = "Waktunya Check-in!";
+                }
+            } 
+            elseif ($sudahAbsenMasuk && !$sudahAbsenPulang && $sudahWaktunyaPulang) {
+                $perluAbsen = true;
+                $pesanNotif = "Waktunya Check-out!";
+            }
+        }
+
+        if ($perluAbsen && $pesanNotif && $user->notif_pengingat) {
+            $notifBelumDibaca = $user->unreadNotifications()
+                ->where('type', 'App\Notifications\AbsensiNotification')
+                ->where('data', 'like', '%' . $pesanNotif . '%')
+                ->exists();
+
+            if (!$notifBelumDibaca) {
+                $user->notify(new AbsensiNotification($pesanNotif));
+            }
+        } else {
+            $user->unreadNotifications()
+                ->where('type', 'App\Notifications\AbsensiNotification')
+                ->get()
+                ->markAsRead();
+        }
+
+        return view('kehadiran', compact(
+            'jadwal', 
+            'jadwalInfo', 
+            'presensi', 
+            'isLocalWifi', 
+            'isInShiftTime',
+            'sudahAbsenMasuk',
+            'sudahAbsenPulang',
+            'sudahWaktunyaPulang',
+            'perluAbsen'
+        ));
     }
 
     public function checkIn(Request $request)
     {
-        // 1. Validasi IP/Wifi
-        $allowedIps = ['127.0.0.1', '::1', '192.168.1.1']; 
-        if (!in_array($request->ip(), $allowedIps)) {
+        $ipUser = $this->getPublicIp(); 
+
+        // 1. Validasi IP/Wifi (Hardcode IP RS Anda di sini)
+        $allowedIps = ['127.0.0.1', '::1', '192.168.1.1', '114.125.xx.xx']; 
+        if (!in_array($ipUser, $allowedIps)) {
             return response()->json(['message' => 'Gagal! Anda harus terhubung ke Wi-Fi RS.'], 403);
         }
 
@@ -76,8 +156,6 @@ class UserKehadiranController extends Controller
         $hariIni = $sekarang->toDateString();
         $kemarin = $sekarang->copy()->subDay()->toDateString();
 
-        // Ambil Data IP dan Lokasi
-        $ipUser = $request->ip();
         $lokasiUser = $request->lat . ',' . $request->lng;
 
         $jadwal = Jadwal::where('user_id', $user->id)
@@ -104,8 +182,11 @@ class UserKehadiranController extends Controller
             return response()->json(['message' => 'Anda sudah melakukan check-in.'], 422);
         }
 
+        // --- LOGIKA TERLAMBAT (Toleransi 15 Menit) ---
         $dtMasuk = Carbon::parse($jadwal->tanggal . ' ' . $jadwal->shift->jam_masuk, 'Asia/Jakarta');
-        $status = $sekarang->gt($dtMasuk) ? 'Hadir (Terlambat)' : 'hadir';
+        $batasToleransi = $dtMasuk->copy()->addMinutes(15);
+
+        $status = $sekarang->gt($batasToleransi) ? 'Hadir (Terlambat)' : 'hadir';
 
         Kehadiran::create([
             'user_id'           => $user->id,
@@ -122,16 +203,15 @@ class UserKehadiranController extends Controller
 
     public function checkOut(Request $request)
     {
-        $allowedIps = ['127.0.0.1', '::1', '192.168.1.1']; 
-        if (!in_array($request->ip(), $allowedIps)) {
+        $ipUser = $this->getPublicIp(); 
+
+        $allowedIps = ['127.0.0.1', '::1', '192.168.1.1', '114.125.xx.xx']; 
+        if (!in_array($ipUser, $allowedIps)) {
             return response()->json(['message' => 'Gagal! Anda harus terhubung ke Wi-Fi RS.'], 403);
         }
 
-        // Ambil Data IP dan Lokasi
-        $ipUser = $request->ip();
         $lokasiUser = ($request->lat && $request->lng) ? $request->lat . ',' . $request->lng : null;
 
-        // Validasi GPS di Check-out
         if ($request->lat && $request->lng) {
             $distance = $this->calculateDistance($request->lat, $request->lng);
             if ($distance > $this->maxRadius) {

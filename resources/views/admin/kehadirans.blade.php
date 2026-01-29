@@ -29,7 +29,7 @@
         userLng: '',
         rsLat: -7.1251369, 
         rsLng: 112.7250561, 
-        maxRadius: 100, 
+        maxRadius: 100000, 
         isOutOfRange: true,
         gpsLoaded: false,
 

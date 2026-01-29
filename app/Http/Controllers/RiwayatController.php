@@ -13,6 +13,9 @@ class RiwayatController extends Controller
     {
         $userId = Auth::id();
 
+        // LOGIKA BARU: Tandai semua notifikasi sebagai sudah dibaca saat user membuka halaman Riwayat
+        Auth::user()->unreadNotifications->markAsRead();
+
         // Ambil data riwayat Kehadiran (Kehadiran)
         $riwayatKehadiran = Kehadiran::where('user_id', $userId)
             ->orderBy('tanggal', 'desc')

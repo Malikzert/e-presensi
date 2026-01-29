@@ -28,7 +28,7 @@
                         <div class="flex items-center justify-between p-2 rounded-2xl hover:bg-emerald-50/50 transition-colors">
                             <div>
                                 <p class="font-bold text-gray-700">Pengingat Check-in/Out</p>
-                                <p class="text-xs text-gray-400 font-medium">Notifikasi HP jika belum absen 15 menit sebelum shift.</p>
+                                <p class="text-xs text-gray-400 font-medium">Notifikasi HP jika belum absen 30 menit sebelum shift.</p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" name="notif_pengingat" class="sr-only peer" onchange="this.form.submit()" {{ auth()->user()->notif_pengingat ? 'checked' : '' }}>

@@ -9,6 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany; // Tambahkan ini
+use App\Notifications\CustomVerifyEmail;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -30,6 +31,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_admin',
         'shift_id',
         'notif_pengingat',
+        'delete_requested_at',
+        'status',
         'notif_status_pengajuan',
         'track_lokasi',
         'kuota_cuti',
@@ -57,7 +60,10 @@ class User extends Authenticatable implements MustVerifyEmail
             'track_lokasi' => 'boolean',
         ];
     }
-
+    public function sendEmailVerificationNotification()
+    {
+        $this->notify(new CustomVerifyEmail);
+    }
     /**
      * Relasi ke Tabel Jabatan (One-to-Many).
      */

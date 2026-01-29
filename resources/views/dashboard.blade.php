@@ -14,7 +14,7 @@
 
     <div x-data="{ 
             showModal: true, 
-            timer: 5,
+            timer: 2,
             init() {
                 let interval = setInterval(() => {
                     if (this.timer > 0) this.timer--;

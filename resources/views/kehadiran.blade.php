@@ -321,7 +321,7 @@
             const hours = Math.floor(diff / 3600000);
             const minutes = Math.floor((diff % 3600000) / 60000);
             const seconds = Math.floor((diff % 60000) / 1000);
-            this.workDurationDisplay = `${hours}j ${minutes}m ${seconds}s`;
+            this.workDurationDisplay = `${hours}j ${minutes}m ${seconds}d`;
         }
     }
 }

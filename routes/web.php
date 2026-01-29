@@ -12,10 +12,10 @@ use App\Http\Controllers\Admin\UJController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\UserSettingController;
 use App\Http\Controllers\PengajuanUserController;
-use App\Http\Controllers\UserKehadiranController; // Pastikan Controller ini dibuat
+use App\Http\Controllers\UserKehadiranController; // Controller User
 use App\Http\Controllers\UserJadwalController;
 use App\Http\Controllers\RiwayatController;
-use App\Http\Controllers\USerDashboardController;
+use App\Http\Controllers\UserDashboardController;
 
 // Halaman Depan
 Route::get('/', function () {
@@ -35,19 +35,26 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
     Route::get('/presensi/pdf', [UserDashboardController::class, 'downloadPdf'])->name('presensi.pdf');
     Route::get('/presensi/csv', [UserDashboardController::class, 'exportCsv'])->name('presensi.csv');
+    
     // Profile Management
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // --- PEMBARUAN MENU KEHADIRAN (Hanya akses via WiFi Local) ---
-   // Di dalam Route::middleware('auth')->group(function () { ...
+    // --- PEMBARUAN MENU KEHADIRAN ---
     Route::get('/kehadiran', [UserKehadiranController::class, 'index'])->name('kehadiran');
     Route::post('/kehadiran/check-in', [UserKehadiranController::class, 'checkIn'])->name('kehadiran.checkin');
     Route::post('/kehadiran/check-out', [UserKehadiranController::class, 'checkOut'])->name('kehadiran.checkout');
     Route::get('/jadwal', [UserJadwalController::class, 'index'])->name('jadwal');
-    // Menu Riwayat
+    
+    // Menu Riwayat & Notifikasi
     Route::get('/riwayat', [RiwayatController::class, 'index'])->name('riwayat');
+    // Tambahan Route untuk menghilangkan Dot Notifikasi
+    Route::post('/notif-read/{id}', function($id) {
+        $notification = auth()->user()->notifications()->findOrFail($id);
+        $notification->markAsRead();
+        return back();
+    })->name('notif.markAsRead');
 
     // Menu Pengajuan
     Route::get('/pengajuan', function () {
@@ -55,16 +62,17 @@ Route::middleware('auth')->group(function () {
     })->name('pengajuan');
     Route::post('/pengajuan/user-store', [PengajuanUserController::class, 'store'])->name('pengajuan.user.store');
 
-    // Menu Pengaturan (Folder: views/pengaturan/index.blade.php)
+    // Menu Pengaturan
     Route::get('/pengaturan', function () {
         return view('pengaturan');
     })->name('pengaturan');
 
-    // 2. Route Backend Simpan Pengaturan
+    // Backend Simpan Pengaturan
     Route::post('/pengaturan/update', [UserSettingController::class, 'update'])->name('settings.update');
     
 });
 
+// Grup Route Admin
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     
     // Dashboard
@@ -74,6 +82,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Karyawan
     Route::get('/karyawans', [KaryawanController::class, 'index'])->name('karyawans');
     Route::post('/karyawans', [KaryawanController::class, 'store'])->name('karyawans.store');
+    Route::post('/karyawans/{id}/handle-delete', [KaryawanController::class, 'handleDeletion'])->name('karyawans.handle-delete');
     Route::put('/karyawans/{user}', [KaryawanController::class, 'update'])->name('karyawans.update'); 
     Route::delete('/karyawans/{user}', [KaryawanController::class, 'destroy'])->name('karyawans.destroy');
     Route::get('/UnitJabatan', [UJController::class, 'index'])->name('UnitJabatan');
