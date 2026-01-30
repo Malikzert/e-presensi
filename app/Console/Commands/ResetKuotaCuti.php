@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Models\User;
+use App\Models\Karyawan;
 
 class ResetKuotaCuti extends Command
 {
@@ -15,8 +15,8 @@ class ResetKuotaCuti extends Command
 
     public function handle()
     {
-        // Update semua user yang bukan admin
-        User::where('is_admin', false)->update(['kuota_cuti' => 15]);
+        // Update semua Karyawan yang bukan admin
+        Karyawan::where('is_admin', false)->update(['kuota_cuti' => 15]);
 
         $this->info('Kuota cuti berhasil direset menjadi 15 hari untuk semua karyawan.');
     }

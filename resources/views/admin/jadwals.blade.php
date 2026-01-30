@@ -20,7 +20,7 @@
             editMode: false, 
             deleteModal: false, 
             deleteAction: '', 
-            currentJadwal: { id: '', user_id: '', shift_id: '', tanggal: '' } 
+            currentJadwal: { id: '', karyawan_id: '', shift_id: '', tanggal: '' } 
          }">
         
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -49,7 +49,7 @@
                         Auto-Fill Jadwal
                     </button>
 
-                    <button @click="openModal = true; editMode = false; currentJadwal = { user_id: '', shift_id: '', tanggal: '' }" 
+                    <button @click="openModal = true; editMode = false; currentJadwal = { karyawan_id: '', shift_id: '', tanggal: '' }" 
                             class="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black text-sm shadow-xl shadow-emerald-200 flex items-center gap-2 hover:bg-emerald-700 transition-all w-fit">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                         Plotting Baru
@@ -120,7 +120,7 @@
                                         <div @click="openModal = true; editMode = {{ $jadwalHariIni ? 'true' : 'false' }}; 
                                                     currentJadwal = { 
                                                         id: '{{ $jadwalHariIni->id ?? '' }}', 
-                                                        user_id: '{{ $karyawan->id }}', 
+                                                        karyawan_id: '{{ $karyawan->id }}', 
                                                         tanggal: '{{ $currentDate }}',
                                                         shift_id: '{{ $jadwalHariIni->shift_id ?? '' }}'
                                                     }"
@@ -214,9 +214,9 @@
                     <template x-if="editMode"><input type="hidden" name="_method" value="PUT"></template>
                     <div>
                         <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Karyawan</label>
-                        <select name="user_id" x-model="currentJadwal.user_id" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3.5 text-sm font-bold" required>
+                        <select name="karyawan_id" x-model="currentJadwal.karyawan_id" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3.5 text-sm font-bold" required>
                             <option value="">-- Pilih Karyawan --</option>
-                            @foreach($users as $user)<option value="{{ $user->id }}">{{ $user->name }}</option>@endforeach
+                            @foreach($karyawans as $Karyawan)<option value="{{ $Karyawan->id }}">{{ $Karyawan->name }}</option>@endforeach
                         </select>
                     </div>
                     <div>

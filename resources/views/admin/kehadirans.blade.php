@@ -25,8 +25,8 @@
         editMap: null, 
         marker: null,
         editMarker: null,
-        userLat: '', 
-        userLng: '',
+        KaryawanLat: '', 
+        KaryawanLng: '',
         rsLat: -7.1251369, 
         rsLng: 112.7250561, 
         maxRadius: 100000, 
@@ -77,20 +77,20 @@
                 return;
             }
             navigator.geolocation.getCurrentPosition((position) => {
-                this.userLat = position.coords.latitude;
-                this.userLng = position.coords.longitude;
+                this.KaryawanLat = position.coords.latitude;
+                this.KaryawanLng = position.coords.longitude;
                 this.gpsLoaded = true;
                 
                 const targetMap = type === 'add' ? this.map : this.editMap;
                 const targetMarker = type === 'add' ? this.marker : this.editMarker;
 
-                if (targetMarker) targetMarker.setLatLng([this.userLat, this.userLng]);
+                if (targetMarker) targetMarker.setLatLng([this.KaryawanLat, this.KaryawanLng]);
                 if (targetMap) {
-                    targetMap.setView([this.userLat, this.userLng], 17);
+                    targetMap.setView([this.KaryawanLat, this.KaryawanLng], 17);
                     targetMap.invalidateSize();
                 }
 
-                const dist = this.getDistance(this.userLat, this.userLng, this.rsLat, this.rsLng);
+                const dist = this.getDistance(this.KaryawanLat, this.KaryawanLng, this.rsLat, this.rsLng);
                 this.isOutOfRange = dist > this.maxRadius;
             }, (err) => {
                 console.error(err);
@@ -163,10 +163,10 @@
                             <tr class="hover:bg-emerald-50/50 transition-all">
                                 <td class="px-8 py-5">
                                     <div class="flex items-center gap-3">
-                                        <img src="{{ $item->user->foto ? asset('images/users/'.$item->user->foto) : asset('images/users/default.jpg') }}" class="w-8 h-8 rounded-full object-cover border-2 border-emerald-100">
+                                        <img src="{{ $item->Karyawan->foto ? asset('images/users/'.$item->Karyawan->foto) : asset('images/users/default.jpg') }}" class="w-8 h-8 rounded-full object-cover border-2 border-emerald-100">
                                         <div>
-                                            <div class="font-bold text-gray-800">{{ $item->user->name ?? 'User Dihapus' }}</div>
-                                            <div class="text-[9px] text-emerald-600 font-bold uppercase tracking-tight">ID: {{ $item->user->nopeg ?? '-' }}</div>
+                                            <div class="font-bold text-gray-800">{{ $item->Karyawan->name ?? 'Karyawan Dihapus' }}</div>
+                                            <div class="text-[9px] text-emerald-600 font-bold uppercase tracking-tight">ID: {{ $item->Karyawan->nopeg ?? '-' }}</div>
                                             <div class="text-[10px] text-gray-400 font-medium">{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y') }}</div>
                                         </div>
                                     </div>
@@ -192,10 +192,10 @@
                                 </td>
                                 <td class="px-8 py-5 text-center">
                                     <div class="flex justify-center gap-2">
-                                        <button @click="currentData = {{ json_encode($item->load('user')) }}; openEdit = true; initMap('edit');" class="p-2 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-600 hover:text-white transition-all">
+                                        <button @click="currentData = {{ json_encode($item->load('Karyawan')) }}; openEdit = true; initMap('edit');" class="p-2 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-600 hover:text-white transition-all">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                         </button>
-                                        <button @click="openDelete = true; deleteRoute = '{{ route('admin.kehadirans.destroy', $item->id) }}'; currentData = { name: '{{ $item->user->name ?? 'User' }}' };" class="p-2 bg-rose-100 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all">
+                                        <button @click="openDelete = true; deleteRoute = '{{ route('admin.kehadirans.destroy', $item->id) }}'; currentData = { name: '{{ $item->Karyawan->name ?? 'Karyawan' }}' };" class="p-2 bg-rose-100 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition-all">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         </button>
                                     </div>
@@ -249,14 +249,14 @@
                 </div>
                 <form action="{{ route('admin.kehadirans.store') }}" method="POST">
                     @csrf
-                    <input type="hidden" name="lokasi_masuk" :value="userLat + ',' + userLng">
-                    <input type="hidden" name="lokasi_pulang" :value="userLat + ',' + userLng">
+                    <input type="hidden" name="lokasi_masuk" :value="KaryawanLat + ',' + KaryawanLng">
+                    <input type="hidden" name="lokasi_pulang" :value="KaryawanLat + ',' + KaryawanLng">
                     <div class="space-y-4">
                         <div>
                             <label class="block text-[10px] font-black uppercase text-emerald-700 mb-2 ml-2">Pilih Karyawan</label>
-                            <select name="user_id" class="w-full rounded-2xl border-emerald-100 text-sm focus:ring-emerald-500" required>
+                            <select name="karyawan_id" class="w-full rounded-2xl border-emerald-100 text-sm focus:ring-emerald-500" required>
                                 <option value="" selected disabled>Cari Karyawan...</option>
-                                @foreach($users as $user) <option value="{{ $user->id }}">{{ $user->name }}</option> @endforeach
+                                @foreach($karyawans as $Karyawan) <option value="{{ $Karyawan->id }}">{{ $Karyawan->name }}</option> @endforeach
                             </select>
                         </div>
                         <div>
@@ -320,12 +320,12 @@
                 <form :action="'{{ url('admin/kehadirans') }}/' + currentData.id" method="POST">
                     @csrf @method('PUT')
                     <input type="hidden" name="lokasi_masuk" :value="currentData.lokasi_masuk">
-                    <input type="hidden" name="lokasi_pulang" :value="userLat + ',' + userLng">
+                    <input type="hidden" name="lokasi_pulang" :value="KaryawanLat + ',' + KaryawanLng">
 
                     <div class="space-y-4">
                         <div>
                             <label class="block text-[10px] font-black uppercase text-emerald-700 mb-2 ml-2">Karyawan</label>
-                            <input type="text" :value="currentData.user ? currentData.user.name : ''" class="w-full rounded-2xl border-emerald-100 bg-gray-50 text-sm font-bold text-gray-500" readonly>
+                            <input type="text" :value="currentData.Karyawan ? currentData.Karyawan.name : ''" class="w-full rounded-2xl border-emerald-100 bg-gray-50 text-sm font-bold text-gray-500" readonly>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>

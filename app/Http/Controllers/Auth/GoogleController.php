@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Karyawan;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use Exception;
@@ -11,7 +11,7 @@ use Exception;
 class GoogleController extends Controller
 {
     /**
-     * Mengarahkan user ke halaman login Google
+     * Mengarahkan Karyawan ke halaman login Google
      */
     public function redirectToGoogle()
     {
@@ -27,29 +27,34 @@ class GoogleController extends Controller
     public function handleGoogleCallback()
     {
         try {
-            // Ambil data user dari Google
-            $userGoogle = Socialite::driver('google')
+            $KaryawanGoogle = Socialite::driver('google')
                 ->setHttpClient(new \GuzzleHttp\Client(['verify' => false]))
                 ->user();
             
-            // Cari apakah email Google tersebut terdaftar di database RSU Anna Medika
-            $user = User::where('email', $userGoogle->getEmail())->first();
+            $Karyawan = Karyawan::where('email', $KaryawanGoogle->getEmail())->first();
 
-            if ($user) {
-                // Jika terdaftar, langsung login-kan user tersebut
-                Auth::login($user, true);
+            if ($Karyawan) {
+                // Login-kan Karyawan
+                Auth::login($Karyawan, true);
                 
-                // Redirect ke dashboard
+                // --- LOGIKA REDIRECT BERDASARKAN ROLE ---
+                if ($Karyawan->is_admin == 1) {
+                    // Jika Admin, arahkan ke dashboard admin
+                    return redirect()->intended('/admin/dashboards');
+                }
+                
+                // Jika Karyawan biasa, arahkan ke dashboard karyawan
                 return redirect()->intended('/dashboard');
+                // ----------------------------------------
+                
             } else {
-                // Jika email tidak terdaftar di database MySQL
                 return redirect()->route('login')->withErrors([
-                    'email' => 'Email Google (' . $userGoogle->getEmail() . ') tidak terdaftar sebagai karyawan RSU Anna Medika. Silakan hubungi bagian IT/HRD.'
+                    'email' => 'Email Google (' . $KaryawanGoogle->getEmail() . ') tidak terdaftar.'
                 ]);
             }
 
         } catch (Exception $e) {
-            dd($e->getMessage());
+            return redirect()->route('login')->with('error', 'Terjadi kesalahan saat login Google.');
         }
     }
 }

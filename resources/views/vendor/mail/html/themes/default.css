@@ -1,0 +1,177 @@
+/* Base */
+
+body,
+body *:not(html):not(style):not(br):not(tr):not(code) {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    position: relative;
+}
+
+body {
+    -webkit-text-size-adjust: none;
+    background-color: #f0fdf4; /* Light Emerald Tint */
+    color: #064e3b; /* Deep Emerald Text */
+    height: 100%;
+    line-height: 1.4;
+    margin: 0;
+    padding: 0;
+    width: 100% !important;
+}
+
+p,
+ul,
+ol,
+blockquote {
+    line-height: 1.4;
+    text-align: left;
+}
+
+a {
+    color: #059669; /* Emerald Green Link */
+}
+
+a img {
+    border: none;
+}
+
+/* Typography */
+
+h1 {
+    color: #064e3b;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 0;
+    text-align: left;
+}
+
+h2 {
+    color: #065f46;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 0;
+    text-align: left;
+}
+
+h3 {
+    color: #059669;
+    font-size: 14px;
+    font-weight: bold;
+    margin-top: 0;
+    text-align: left;
+}
+
+p {
+    font-size: 16px;
+    line-height: 1.5em;
+    margin-top: 0;
+    text-align: left;
+}
+
+/* Layout */
+
+.wrapper {
+    background-color: #ecfdf5; /* Very Light Emerald */
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+/* Header */
+
+.header {
+    padding: 25px 0;
+    text-align: center;
+    background-color: #065f46; /* Solid Emerald Header */
+}
+
+.header a {
+    color: #ffffff;
+    font-size: 19px;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+/* Logo */
+
+.logo {
+    height: auto;
+    width: 200px;
+    max-width: 250px;
+    margin-top: 15px;
+    margin-bottom: 10px;
+}
+
+/* Body */
+
+.inner-body {
+    background-color: #ffffff;
+    border-color: #d1fae5; /* Emerald Border */
+    border-radius: 8px;
+    border-width: 1px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    margin: 0 auto;
+    padding: 0;
+    width: 570px;
+}
+
+/* Footer */
+
+.footer p {
+    color: #6b7280;
+    font-size: 12px;
+    text-align: center;
+}
+
+/* Buttons */
+
+.button {
+    border-radius: 6px;
+    color: #fff;
+    display: inline-block;
+    overflow: hidden;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* Primary Button - Emerald Emerald */
+.button-blue,
+.button-primary {
+    background-color: #10b981; 
+    border-bottom: 8px solid #10b981;
+    border-left: 18px solid #10b981;
+    border-right: 18px solid #10b981;
+    border-top: 8px solid #10b981;
+}
+
+/* Success Button - Deep Sea Green */
+.button-green,
+.button-success {
+    background-color: #059669; 
+    border-bottom: 8px solid #059669;
+    border-left: 18px solid #059669;
+    border-right: 18px solid #059669;
+    border-top: 8px solid #059669;
+}
+
+/* Error Button - Medical Red */
+.button-red,
+.button-error {
+    background-color: #be123c; 
+    border-bottom: 8px solid #be123c;
+    border-left: 18px solid #be123c;
+    border-right: 18px solid #be123c;
+    border-top: 8px solid #be123c;
+}
+
+/* Panels */
+
+.panel {
+    border-left: #10b981 solid 4px;
+    margin: 21px 0;
+}
+
+.panel-content {
+    background-color: #f0fdf4;
+    color: #064e3b;
+    padding: 16px;
+}

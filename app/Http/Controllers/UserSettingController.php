@@ -28,13 +28,13 @@ class UserSettingController extends Controller
             $hariIni = $sekarang->toDateString();
 
             // 1. Ambil jadwal terdekat (hari ini)
-            $jadwal = Jadwal::where('user_id', $user->id)
+            $jadwal = Jadwal::where('karyawan_id', $user->id)
                 ->where('tanggal', $hariIni)
                 ->with('shift')
                 ->first();
 
             if ($jadwal && $jadwal->shift) {
-                $presensi = Kehadiran::where('user_id', $user->id)
+                $presensi = Kehadiran::where('karyawan_id', $user->id)
                     ->where('tanggal', $hariIni)
                     ->first();
 

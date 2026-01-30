@@ -10,7 +10,7 @@
             search: '{{ request('search') }}',
             showTambahModal: false,
             showEditModal: false,
-            editData: { id: '', jenis: '', mulai: '', selesai: '', alasan: '', bukti: '' }
+            editData: { id: '', kategori_pengajuan_id: '', mulai: '', selesai: '', alasan: '', bukti: '' }
          }">
         
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -97,25 +97,32 @@
                             @forelse($pengajuans as $p)
                             <tr class="hover:bg-emerald-50/40 transition-colors">
                                 <td class="px-8 py-5">
-                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($p->user->name) }}&background=10b981&color=fff" class="w-12 h-12 rounded-2xl shadow-sm border border-white mx-auto">
+                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($p->Karyawan->name) }}&background=10b981&color=fff" class="w-12 h-12 rounded-2xl shadow-sm border border-white mx-auto">
                                 </td>
                                 <td class="px-8 py-5">
                                     <div class="flex flex-col">
                                         <span class="text-[9px] font-black text-emerald-500 tracking-tighter mb-0.5">#{{ $p->kode_pengajuan }}</span>
-                                        <div class="font-black text-emerald-900 text-sm">{{ $p->user->name }}</div>
-                                        <div class="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">{{ $p->user->email }}</div>
+                                        <div class="font-black text-emerald-900 text-sm">{{ $p->Karyawan->name }}</div>
+                                        <div class="text-[10px] text-emerald-600 font-bold uppercase tracking-tight">{{ $p->Karyawan->email }}</div>
                                     </div>
                                 </td>
                                 <td class="px-8 py-5 text-center">
                                     @php
-                                        $color = match($p->jenis_pengajuan) {
-                                            'Cuti' => 'blue',
-                                            'Sakit' => 'amber',
-                                            default => 'purple'
+                                        $katNama = $p->kategori->nama_pengajuan ?? 'Umum';
+                                        $slug = strtolower($katNama);
+                                        
+                                        // Mapping warna ke Tailwind classes
+                                        $colorClasses = match(true) {
+                                            str_contains($slug, 'cuti') => 'bg-blue-50 text-blue-700 border-blue-100',
+                                            str_contains($slug, 'sakit') => 'bg-amber-50 text-amber-700 border-amber-100',
+                                            str_contains($slug, 'izin') => 'bg-purple-50 text-purple-700 border-purple-100',
+                                            str_contains($slug, 'shift') => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                            default => 'bg-gray-50 text-gray-700 border-gray-100'
                                         };
                                     @endphp
-                                    <span class="px-3 py-1 bg-{{ $color }}-50 text-{{ $color }}-700 rounded-lg text-[10px] font-black uppercase">
-                                        {{ $p->jenis_pengajuan }}
+
+                                    <span class="px-3 py-1 border {{ $colorClasses }} rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                        {{ $katNama }}
                                     </span>
                                 </td>
                                 <td class="px-8 py-5 text-sm">
@@ -174,10 +181,10 @@
                                                 showEditModal = true; 
                                                 editData = { 
                                                     id: '{{ $p->id }}', 
-                                                    jenis: '{{ $p->jenis_pengajuan }}', 
+                                                    kategori_pengajuan_id: '{{ $p->kategori_pengajuan_id }}', 
                                                     mulai: '{{ $p->tgl_mulai->format('Y-m-d') }}', 
                                                     selesai: '{{ $p->tgl_selesai->format('Y-m-d') }}', 
-                                                    alasan: '{{ $p->alasan }}' 
+                                                    alasan: '{{ addslashes($p->alasan) }}' 
                                                 }" 
                                                 class="p-2.5 bg-amber-50 text-amber-600 rounded-xl hover:bg-amber-600 hover:text-white transition-all shadow-sm">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
@@ -223,19 +230,19 @@
                         @csrf
                         <div>
                             <label class="block text-[10px] font-black text-emerald-700 uppercase mb-1">Pilih Karyawan</label>
-                            <select name="user_id" required class="w-full bg-emerald-50 border-none rounded-xl text-sm focus:ring-emerald-500">
-                                @foreach($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
+                            <select name="karyawan_id" required class="w-full bg-emerald-50 border-none rounded-xl text-sm focus:ring-emerald-500">
+                                @foreach($karyawans as $Karyawan)
+                                    <option value="{{ $Karyawan->id }}">{{ $Karyawan->name }}</option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[10px] font-black text-emerald-700 uppercase mb-1">Jenis</label>
-                                <select name="jenis_pengajuan" class="w-full bg-emerald-50 border-none rounded-xl text-sm focus:ring-emerald-500">
-                                    <option>Cuti / Tukar Shift</option>
-                                    <option>Sakit</option>
-                                    <option>Izin</option>
+                                <select name="kategori_pengajuan_id" required class="w-full bg-emerald-50 border-none rounded-xl text-sm focus:ring-emerald-500">
+                                    @foreach($kategoris as $kat)
+                                        <option value="{{ $kat->id }}">{{ $kat->nama_pengajuan }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div>
@@ -276,10 +283,10 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[10px] font-black text-emerald-700 uppercase mb-1">Jenis</label>
-                                <select name="jenis_pengajuan" x-model="editData.jenis" class="w-full bg-emerald-50 border-none rounded-xl text-sm focus:ring-emerald-500">
-                                    <option>Cuti / Tukar Shift</option>
-                                    <option>Sakit</option>
-                                    <option>Izin</option>
+                                <select name="kategori_pengajuan_id" x-model="editData.kategori_pengajuan_id" class="w-full bg-emerald-50 border-none rounded-xl text-sm focus:ring-emerald-500">
+                                    @foreach($kategoris as $kat)
+                                        <option value="{{ $kat->id }}">{{ $kat->nama_pengajuan }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div>

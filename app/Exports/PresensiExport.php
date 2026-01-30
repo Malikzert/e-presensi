@@ -17,7 +17,7 @@ class PresensiExport implements FromCollection, WithHeadings, WithMapping, WithS
     {
         // Gunakan with('shift') untuk mengambil data dari tabel shifts
         return Kehadiran::with('shift')
-            ->where('user_id', Auth::id())
+            ->where('karyawan_id', Auth::id())
             ->latest('tanggal')
             ->get();
     }

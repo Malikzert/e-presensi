@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Karyawan;
 use App\Models\Kehadiran; // Gunakan ini
 use App\Models\Pengajuan; // Gunakan ini
 use Carbon\Carbon;
@@ -16,7 +16,7 @@ class DashboardController extends Controller
     {
         $today = Carbon::today();
 
-        $totalKaryawan = User::where('is_admin', false)->count();
+        $totalKaryawan = Karyawan::where('is_admin', false)->count();
         
         // Sesuaikan pemanggilan model menjadi Kehadiran
         $hadirHariIni = Kehadiran::whereDate('tanggal', $today)
@@ -29,7 +29,7 @@ class DashboardController extends Controller
                         ->where('status', 'Hadir (Terlambat)')
                         ->count();
 
-        $latestActivities = Kehadiran::with('user')
+        $latestActivities = Kehadiran::with('Karyawan')
                             ->whereDate('tanggal', $today)
                             ->latest()
                             ->take(5)

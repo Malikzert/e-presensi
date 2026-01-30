@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File; // Tambahkan ini untuk manajemen file yang lebih baik
 
 class AdminProfileController extends Controller
 {
@@ -19,29 +20,30 @@ class AdminProfileController extends Controller
     // Memproses update data
     public function update(Request $request)
     {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
+        // PERBAIKAN: Gunakan Auth::user(), bukan Auth::Karyawan()
+        /** @var \App\Models\Karyawan $Karyawan */
+        $Karyawan = Auth::user();
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => 'required|email|unique:karyawans,email,' . $Karyawan->id,
             'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'password' => 'nullable|min:8|confirmed',
         ]);
 
-        $user->name = $request->name;
-        $user->email = $request->email;
+        $Karyawan->name = $request->name;
+        $Karyawan->email = $request->email;
 
         if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
+            $Karyawan->password = Hash::make($request->password);
         }
 
         if ($request->hasFile('foto')) {
-            // PROTEKSI: Jangan hapus jika foto lama adalah default.jpg
-            if ($user->foto && $user->foto !== 'default.jpg') {
-                $oldPath = public_path('images/users/' . $user->foto);
-                if (file_exists($oldPath)) {
-                    unlink($oldPath);
+            // PROTEKSI: Hapus foto lama jika ada dan bukan default.jpg
+            if ($Karyawan->foto && $Karyawan->foto !== 'default.jpg') {
+                $oldPath = public_path('images/users/' . $Karyawan->foto);
+                if (File::exists($oldPath)) {
+                    File::delete($oldPath);
                 }
             }
 
@@ -50,11 +52,11 @@ class AdminProfileController extends Controller
             $nama_file = time() . '_admin.' . $file->getClientOriginalExtension();
             $file->move(public_path('images/users'), $nama_file);
             
-            // Simpan ke database
-            $user->foto = $nama_file;
+            // Simpan nama file baru ke database
+            $Karyawan->foto = $nama_file;
         }
 
-        $user->save();
+        $Karyawan->save();
 
         return back()->with('success', 'Profil Anda berhasil diperbarui!');
     }

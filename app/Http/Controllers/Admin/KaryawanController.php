@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Karyawan;
 use App\Models\Jabatan;
 use App\Models\Unit;
 use Illuminate\Http\Request;
@@ -14,7 +14,7 @@ class KaryawanController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::where('is_admin', false)->with(['jabatan', 'units']);
+        $query = Karyawan::where('is_admin', false)->with(['jabatan', 'units']);
 
         // Filter Search
         if ($request->has('search')) {
@@ -48,23 +48,23 @@ class KaryawanController extends Controller
      */
     public function handleDeletion(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $karyawan = Karyawan::findOrFail($id);
         
         if ($request->action == 'approve') {
             // Hapus Foto fisik jika ada
-            if ($user->foto && $user->foto !== 'default.jpg') {
-                $path = public_path('images/users/' . $user->foto);
+            if ($karyawan->foto && $karyawan->foto !== 'default.jpg') {
+                $path = public_path('images/users/' . $karyawan->foto);
                 if (File::exists($path)) {
                     File::delete($path);
                 }
             }
             
-            $user->delete(); // Hapus permanen dari DB
+            $karyawan->delete(); // Hapus permanen dari DB
             return redirect()->route('admin.karyawans')->with('success', 'Akun karyawan telah dihapus secara permanen.');
             
         } else {
             // Tolak Penghapusan: Kembalikan status ke aktif
-            $user->update([
+            $karyawan->update([
                 'delete_requested_at' => null,
                 'status' => 'aktif'
             ]);
@@ -77,10 +77,10 @@ class KaryawanController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'required|email|unique:karyawans,email',
             'password' => 'required|min:8',
-            'nik' => 'required|unique:users,nik',
-            'nopeg' => 'required|unique:users,nopeg',
+            'nik' => 'required|unique:karyawans,nik',
+            'nopeg' => 'required|unique:karyawans,nopeg',
             'gender' => 'required|in:Laki-laki,Perempuan',
             'jabatan_id' => 'required|exists:jabatans,id',
             'unit_ids' => 'required|array',
@@ -100,19 +100,19 @@ class KaryawanController extends Controller
             $data['foto'] = $nama_file;
         }
 
-        $user = User::create($data);
-        $user->units()->sync($request->unit_ids);
+        $karyawan = Karyawan::create($data);
+        $karyawan->units()->sync($request->unit_ids);
 
         return back()->with('success', 'Karyawan berhasil ditambahkan!');
     }
 
-    public function update(Request $request, User $user)
+    public function update(Request $request, Karyawan $karyawan)
     {
         $request->validate([
             'name' => 'required',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'nik' => 'required|unique:users,nik,' . $user->id,
-            'nopeg' => 'required|unique:users,nopeg,' . $user->id,
+            'email' => 'required|email|unique:karyawans,email,' . $karyawan->id,
+            'nik' => 'required|unique:karyawans,nik,' . $karyawan->id,
+            'nopeg' => 'required|unique:karyawans,nopeg,' . $karyawan->id,
             'gender' => 'required|in:Laki-laki,Perempuan',
             'jabatan_id' => 'required|exists:jabatans,id',
             'unit_ids' => 'required|array',
@@ -127,8 +127,8 @@ class KaryawanController extends Controller
         }
 
         if ($request->hasFile('foto')) {
-            if ($user->foto && $user->foto !== 'default.jpg') {
-                $old_path = public_path('images/users/' . $user->foto);
+            if ($karyawan->foto && $karyawan->foto !== 'default.jpg') {
+                $old_path = public_path('images/users/' . $karyawan->foto);
                 if (file_exists($old_path)) {
                     unlink($old_path);
                 }
@@ -140,22 +140,22 @@ class KaryawanController extends Controller
             $data['foto'] = $nama_file;
         }
 
-        $user->update($data);
-        $user->units()->sync($request->unit_ids);
+        $karyawan->update($data);
+        $karyawan->units()->sync($request->unit_ids);
 
         return back()->with('success', 'Data karyawan berhasil diperbarui!');
     }
 
-    public function destroy(User $user)
+    public function destroy(Karyawan $karyawan)
     {
-        if ($user->foto && $user->foto !== 'default.jpg') {
-            $path = public_path('images/users/' . $user->foto);
+        if ($karyawan->foto && $karyawan->foto !== 'default.jpg') {
+            $path = public_path('images/users/' . $karyawan->foto);
             if (file_exists($path)) {
                 unlink($path);
             }
         }
 
-        $user->delete();
+        $karyawan->delete();
         return back()->with('success', 'Karyawan berhasil dihapus!');
     }
 

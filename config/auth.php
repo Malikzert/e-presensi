@@ -15,7 +15,7 @@ return [
 
     'defaults' => [
         'guard' => env('AUTH_GUARD', 'web'),
-        'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
+        'passwords' => env('AUTH_PASSWORD_BROKER', 'karyawans'),
     ],
 
     /*
@@ -25,10 +25,10 @@ return [
     |
     | Next, you may define every authentication guard for your application.
     | Of course, a great default configuration has been defined for you
-    | which utilizes session storage plus the Eloquent user provider.
+    | which utilizes session storage plus the Eloquent Karyawan provider.
     |
-    | All authentication guards have a user provider, which defines how the
-    | users are actually retrieved out of your database or other storage
+    | All authentication guards have a Karyawan provider, which defines how the
+    | karyawans are actually retrieved out of your database or other storage
     | system used by the application. Typically, Eloquent is utilized.
     |
     | Supported: "session"
@@ -38,20 +38,20 @@ return [
     'guards' => [
         'web' => [
             'driver' => 'session',
-            'provider' => 'users',
+            'provider' => 'karyawans',
         ],
     ],
 
     /*
     |--------------------------------------------------------------------------
-    | User Providers
+    | Karyawan Providers
     |--------------------------------------------------------------------------
     |
-    | All authentication guards have a user provider, which defines how the
-    | users are actually retrieved out of your database or other storage
+    | All authentication guards have a Karyawan provider, which defines how the
+    | karyawans are actually retrieved out of your database or other storage
     | system used by the application. Typically, Eloquent is utilized.
     |
-    | If you have multiple user tables or models you may configure multiple
+    | If you have multiple Karyawan tables or models you may configure multiple
     | providers to represent the model / table. These providers may then
     | be assigned to any extra authentication guards you have defined.
     |
@@ -60,14 +60,14 @@ return [
     */
 
     'providers' => [
-        'users' => [
+        'karyawans' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => env('AUTH_MODEL', App\Models\Karyawan::class),
         ],
 
-        // 'users' => [
+        // 'karyawans' => [
         //     'driver' => 'database',
-        //     'table' => 'users',
+        //     'table' => 'karyawans',
         // ],
     ],
 
@@ -78,21 +78,21 @@ return [
     |
     | These configuration options specify the behavior of Laravel's password
     | reset functionality, including the table utilized for token storage
-    | and the user provider that is invoked to actually retrieve users.
+    | and the Karyawan provider that is invoked to actually retrieve karyawans.
     |
     | The expiry time is the number of minutes that each reset token will be
     | considered valid. This security feature keeps tokens short-lived so
     | they have less time to be guessed. You may change this as needed.
     |
-    | The throttle setting is the number of seconds a user must wait before
-    | generating more password reset tokens. This prevents the user from
+    | The throttle setting is the number of seconds a Karyawan must wait before
+    | generating more password reset tokens. This prevents the Karyawan from
     | quickly generating a very large amount of password reset tokens.
     |
     */
 
     'passwords' => [
-        'users' => [
-            'provider' => 'users',
+        'karyawans' => [
+            'provider' => 'karyawans',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
             'expire' => 60,
             'throttle' => 60,
@@ -105,7 +105,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may define the number of seconds before a password confirmation
-    | window expires and users are asked to re-enter their password via the
+    | window expires and karyawans are asked to re-enter their password via the
     | confirmation screen. By default, the timeout lasts for three hours.
     |
     */

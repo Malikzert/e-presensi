@@ -17,14 +17,14 @@ class RiwayatController extends Controller
         Auth::user()->unreadNotifications->markAsRead();
 
         // Ambil data riwayat Kehadiran (Kehadiran)
-        $riwayatKehadiran = Kehadiran::where('user_id', $userId)
+        $riwayatKehadiran = Kehadiran::where('karyawan_id', $userId)
             ->orderBy('tanggal', 'desc')
             ->limit(31) // Ambil sebulan terakhir
             ->get();
 
         // Ambil data pengajuan (Cuti/Izin)
         // Sesuaikan dengan nama model dan kolom di database Anda
-        $riwayatPengajuan = Pengajuan::where('user_id', $userId)
+        $riwayatPengajuan = Pengajuan::where('karyawan_id', $userId)
             ->orderBy('created_at', 'desc')
             ->get();
 

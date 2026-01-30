@@ -23,18 +23,18 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    /**
-     * Handle an incoming authentication request.
-     */
     public function store(LoginRequest $request): RedirectResponse
     {
+        // Melakukan proses otentikasi (cek email & password)
         $request->authenticate();
 
-        // --- CEK STATUS AKUN & ROLE (LOGIKA BARU) ---
-        $user = Auth::user();
+        /** * PERBAIKAN: Gunakan Auth::user() 
+         * Meskipun modelnya Karyawan, Laravel memanggilnya lewat user()
+         */
+        $karyawan = Auth::user(); 
         
         // 1. Cek apakah akun sedang dalam proses hapus
-        if ($user->status === 'pending_delete') {
+        if ($karyawan->status === 'pending_delete') {
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -44,15 +44,18 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
+        // Regenerasi session untuk keamanan
         $request->session()->regenerate();
 
-        // 2. Tentukan tujuan Redirect berdasarkan Role
-        if ($user->is_admin) {
+        // 2. Tentukan tujuan Redirect berdasarkan Role (is_admin)
+        if ($karyawan->is_admin) {
             return redirect()->intended(route('admin.dashboards'));
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Redirect untuk karyawan biasa
+        return redirect()->intended(route('dashboard'));
     }
+
     /**
      * Destroy an authenticated session.
      */

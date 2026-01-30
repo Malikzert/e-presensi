@@ -14,7 +14,7 @@ class StatusPengajuanNotification extends Notification
     protected $pengajuan;
 
     /**
-     * Kita masukkan data pengajuan ke dalam constructor
+     * Masukkan instance pengajuan ke dalam constructor.
      */
     public function __construct($pengajuan)
     {
@@ -22,8 +22,8 @@ class StatusPengajuanNotification extends Notification
     }
 
     /**
-     * Ubah channel menjadi 'database'. 
-     * Anda bisa menambah 'mail' jika ingin kirim email juga.
+     * Tentukan channel pengiriman.
+     * Menggunakan 'database' agar muncul di tabel notifications.
      */
     public function via(object $notifiable): array
     {
@@ -31,28 +31,30 @@ class StatusPengajuanNotification extends Notification
     }
 
     /**
-     * Data yang akan disimpan ke tabel 'notifications' kolom 'data'
+     * Data yang akan disimpan ke kolom 'data' di tabel notifications.
      */
     public function toDatabase(object $notifiable): array
     {
+        // PERBAIKAN: Menggunakan relasi 'kategori' dan kolom 'nama_kategori' sesuai Model
+        $namaKategori = $this->pengajuan->kategori->nama_kategori 
+                        ?? $this->pengajuan->jenis_pengajuan 
+                        ?? 'Pengajuan';
+
         return [
             'pengajuan_id' => $this->pengajuan->id,
-            'jenis' => $this->pengajuan->jenis_pengajuan,
-            'status' => $this->pengajuan->status,
-            'pesan' => 'Pengajuan ' . $this->pengajuan->jenis_pengajuan . ' Anda telah ' . $this->pengajuan->status,
+            'jenis'        => $namaKategori,
+            'status'       => $this->pengajuan->status,
+            'title'        => 'Pembaruan Status Pengajuan',
+            'pesan'        => 'Pengajuan ' . $namaKategori . ' Anda telah ' . strtoupper($this->pengajuan->status) . ' oleh HRD.',
+            'url'          => route('pengajuan'), 
         ];
     }
 
     /**
-     * Jika suatu saat Anda butuh format array umum (biasanya untuk broadcast/database)
+     * Digunakan jika Anda menggunakan broadcast (Real-time) atau channel lainnya.
      */
     public function toArray(object $notifiable): array
     {
-        return [
-            'pengajuan_id' => $this->pengajuan->id,
-            'jenis' => $this->pengajuan->jenis_pengajuan,
-            'status' => $this->pengajuan->status,
-            'pesan' => 'Pengajuan ' . $this->pengajuan->jenis_pengajuan . ' Anda telah ' . $this->pengajuan->status,
-        ];
+        return $this->toDatabase($notifiable);
     }
 }

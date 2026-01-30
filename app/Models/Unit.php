@@ -21,6 +21,6 @@ class Unit extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'unit_user');
+        return $this->belongsToMany(User::class, 'penempatans');
     }
 }

@@ -84,10 +84,10 @@
                         <div class="flex items-center justify-between p-4 bg-emerald-50/50 rounded-2xl border border-emerald-50 hover:bg-white transition-all">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white font-bold shadow-md">
-                                    {{ substr($activity->user->name, 0, 1) }}
+                                    {{ substr($activity->Karyawan->name, 0, 1) }}
                                 </div>
                                 <div>
-                                    <p class="text-sm font-bold text-gray-800">{{ $activity->user->name }}</p>
+                                    <p class="text-sm font-bold text-gray-800">{{ $activity->Karyawan->name }}</p>
                                     <p class="text-[10px] text-emerald-600 font-bold uppercase tracking-tighter">
                                         {{ $activity->status }} • {{ \Carbon\Carbon::parse($activity->jam_masuk)->format('H:i') }} WIB
                                     </p>

@@ -24,12 +24,12 @@ class AppServiceProvider extends ServiceProvider
 
                 // 1. Ambil jadwal berdasarkan tanggal hari ini
                 $jadwal = Jadwal::with('shift')
-                                ->where('user_id', $user->id)
+                                ->where('karyawan_id', $user->id)
                                 ->where('tanggal', $tanggalHariIni)
                                 ->first();
 
                 // 2. Cek data kehadiran
-                $presensi = Kehadiran::where('user_id', $user->id)
+                $presensi = Kehadiran::where('karyawan_id', $user->id)
                                     ->whereDate('tanggal', $tanggalHariIni)
                                     ->first();
 

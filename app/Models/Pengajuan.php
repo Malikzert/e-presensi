@@ -14,36 +14,43 @@ class Pengajuan extends Model
     protected $table = 'pengajuans';
 
     protected $fillable = [
-        'user_id',
+        'karyawan_id',
         'kode_pengajuan',
-        'jenis_pengajuan',
+        'kategori_pengajuan_id',
         'tgl_mulai',
         'tgl_selesai',
         'alasan',
         'bukti',
         'status',
     ];
+
     protected static function booted()
     {
         static::creating(function ($pengajuan) {
-            // Membuat kode otomatis sebelum data masuk ke DB
-            // Format: REQ-20260120-ABCDE
+            // Format Kode: AMM-20260130-ABCDE
             $pengajuan->kode_pengajuan = 'AMM-' . date('Ymd') . '-' . strtoupper(Str::random(5));
         });
     }
-    /**
-     * Otomatis mengubah string tanggal menjadi objek Carbon
-     */
+
     protected $casts = [
         'tgl_mulai' => 'date',
         'tgl_selesai' => 'date',
     ];
 
     /**
-     * Relasi ke User (Karyawan)
+     * Relasi ke Karyawan (Sebelumnya User)
      */
-    public function user(): BelongsTo
+    public function karyawan(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        // Pastikan foreign key merujuk ke karyawan_id
+        return $this->belongsTo(Karyawan::class, 'karyawan_id');
+    }
+
+    /**
+     * Relasi ke Master Kategori Pengajuan
+     */
+    public function kategori(): BelongsTo
+    {
+        return $this->belongsTo(KategoriPengajuan::class, 'kategori_pengajuan_id');
     }
 }

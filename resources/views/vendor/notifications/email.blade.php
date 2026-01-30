@@ -1,28 +1,24 @@
 <x-mail::message>
-{{-- Greeting --}}
-@if (! empty($greeting))
-# {{ $greeting }}
+{{-- LOGIKA DECISION JUDUL --}}
+@if (isset($actionText) && (str_contains(strtolower($actionText), 'sandi') || str_contains(strtolower($actionText), 'password')))
+# Pemulihan Kata Sandi
+@elseif (isset($actionText) && (str_contains(strtolower($actionText), 'verifikasi') || str_contains(strtolower($actionText), 'verify')))
+# Verifikasi Akun Baru
 @else
-@if ($level === 'error')
-# @lang('Whoops!')
-@else
-# @lang('Hello!')
-@endif
+# @lang('Halo!')
 @endif
 
 {{-- Intro Lines --}}
 @foreach ($introLines as $line)
 {{ $line }}
-
 @endforeach
 
-{{-- Action Button --}}
+{{-- LOGIKA DECISION TOMBOL --}}
 @isset($actionText)
 <?php
-    $color = match ($level) {
-        'success', 'error' => $level,
-        default => 'primary',
-    };
+    // Warna 'error' (Merah) untuk Reset, 'success' (Hijau Emerald) untuk Verifikasi
+    $isReset = str_contains(strtolower($actionText), 'sandi') || str_contains(strtolower($actionText), 'password');
+    $color = $isReset ? 'error' : 'success'; 
 ?>
 <x-mail::button :url="$actionUrl" :color="$color">
 {{ $actionText }}
@@ -32,27 +28,21 @@
 {{-- Outro Lines --}}
 @foreach ($outroLines as $line)
 {{ $line }}
-
 @endforeach
 
 {{-- Salutation --}}
 @if (! empty($salutation))
 {{ $salutation }}
 @else
-@lang('Regards,')<br>
-{{ config('app.name') }}
+Salam hangat,<br>
+**IT RSU Anna Medika**
 @endif
 
 {{-- Subcopy --}}
 @isset($actionText)
 <x-slot:subcopy>
-@lang(
-    "If you're having trouble clicking the \":actionText\" button, copy and paste the URL below\n".
-    'into your web browser:',
-    [
-        'actionText' => $actionText,
-    ]
-) <span class="break-all">[{{ $displayableActionUrl }}]({{ $actionUrl }})</span>
+Jika Anda mengalami kendala saat menekan tombol "{{ $actionText }}", silakan salin dan tempel tautan di bawah ini ke browser Anda:
+<span class="break-all">[{{ $displayableActionUrl }}]({{ $actionUrl }})</span>
 </x-slot:subcopy>
 @endisset
 </x-mail::message>

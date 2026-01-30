@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kehadiran;
-use App\Models\User;
+use App\Models\Karyawan;
 use App\Models\Shift;
 use App\Models\Jadwal;
 use Illuminate\Http\Request;
@@ -15,10 +15,10 @@ class KehadiranController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Kehadiran::with('user');
+        $query = Kehadiran::with('Karyawan');
 
         if ($request->has('search')) {
-            $query->whereHas('user', function($q) use ($request) {
+            $query->whereHas('Karyawan', function($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%');
             });
         }
@@ -30,16 +30,16 @@ class KehadiranController extends Controller
         // Memperbaiki pagination agar tidak double call
         $kehadirans = $query->orderBy('tanggal', 'desc')->paginate(10)->withQueryString();
         
-        $users = User::where('is_admin', false)->get();
+        $karyawans = Karyawan::where('is_admin', false)->get();
         $shifts = Shift::all(); 
 
-        return view('admin.kehadirans', compact('kehadirans', 'users', 'shifts'));
+        return view('admin.kehadirans', compact('kehadirans', 'karyawans', 'shifts'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'user_id' => 'required',
+            'karyawan_id' => 'required',
             'shift_id' => 'required',
             'tanggal' => 'required|date',
             'jam_masuk' => 'required',
@@ -47,7 +47,7 @@ class KehadiranController extends Controller
             'lokasi_masuk' => 'nullable',
         ]);
 
-        $jadwal = Jadwal::where('user_id', $request->user_id)
+        $jadwal = Jadwal::where('karyawan_id', $request->karyawan_id)
                         ->whereDate('tanggal', $request->tanggal)
                         ->first();
 
@@ -62,10 +62,10 @@ class KehadiranController extends Controller
         if ($shift && in_array($request->status, ['Hadir', 'Hadir (Terlambat)', 'hadir'])) {
             $jamMasukShift = Carbon::parse($request->tanggal . ' ' . $shift->jam_masuk);
             $batasTerlambat = $jamMasukShift->copy()->addMinutes(15);
-            $jamInputUser = Carbon::parse($request->tanggal . ' ' . $request->jam_masuk);
+            $jamInputKaryawan = Carbon::parse($request->tanggal . ' ' . $request->jam_masuk);
 
             // Jika jam input LEBIH BESAR (gt) dari batas toleransi (21:15), maka Terlambat
-            if ($jamInputUser->gt($batasTerlambat)) {
+            if ($jamInputKaryawan->gt($batasTerlambat)) {
                 $data['status'] = 'Hadir (Terlambat)';
             } else {
                 $data['status'] = 'hadir'; 
@@ -94,9 +94,9 @@ class KehadiranController extends Controller
         if ($shift && in_array($status, ['Hadir', 'Hadir (Terlambat)', 'hadir'])) {
             $jamMasukShift = Carbon::parse($kehadiran->tanggal . ' ' . $shift->jam_masuk);
             $batasTerlambat = $jamMasukShift->copy()->addMinutes(15);
-            $jamInputUser = Carbon::parse($kehadiran->tanggal . ' ' . $request->jam_masuk);
+            $jamInputKaryawan = Carbon::parse($kehadiran->tanggal . ' ' . $request->jam_masuk);
 
-            if ($jamInputUser->gt($batasTerlambat)) {
+            if ($jamInputKaryawan->gt($batasTerlambat)) {
                 $status = 'Hadir (Terlambat)';
             } else {
                 $status = 'hadir';

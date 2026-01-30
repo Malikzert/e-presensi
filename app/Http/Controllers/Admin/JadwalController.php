@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Jadwal;
 use App\Models\Shift;
-use App\Models\User;
+use App\Models\Karyawan;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -17,7 +17,7 @@ class JadwalController extends Controller
     public function index(Request $request)
     {
         // 1. Data referensi untuk Modal Input
-        $users = User::where('is_admin', false)->get();
+        $Karyawans = Karyawan::where('is_admin', false)->get();
         $shifts = Shift::all();
 
         // 2. Ambil parameter filter (Default bulan ini)
@@ -28,8 +28,8 @@ class JadwalController extends Controller
         $date = Carbon::parse($bulanInput);
         $daysInMonth = $date->daysInMonth;
 
-        // 3. Query Utama (Mengambil User dan Jadwalnya pada bulan terpilih)
-        $query = User::where('is_admin', false)
+        // 3. Query Utama (Mengambil Karyawan dan Jadwalnya pada bulan terpilih)
+        $query = Karyawan::where('is_admin', false)
             ->with(['jabatan', 'jadwals' => function($q) use ($date) {
                 $q->whereMonth('tanggal', $date->month)
                   ->whereYear('tanggal', $date->year)
@@ -45,7 +45,7 @@ class JadwalController extends Controller
         $karyawans = $query->paginate(10);
 
         return view('admin.jadwals', compact(
-            'users', 
+            'Karyawans', 
             'shifts', 
             'karyawans', 
             'daysInMonth', 
@@ -80,14 +80,14 @@ class JadwalController extends Controller
             if ($hariAsal <= $ke->daysInMonth) {
                 $tanggalBaru = Carbon::create($ke->year, $ke->month, $hariAsal)->format('Y-m-d');
 
-                // Cek apakah user sudah punya jadwal di tanggal tersebut
-                $exists = Jadwal::where('user_id', $item->user_id)
+                // Cek apakah Karyawan sudah punya jadwal di tanggal tersebut
+                $exists = Jadwal::where('karyawan_id', $item->karyawan_id)
                     ->where('tanggal', $tanggalBaru)
                     ->exists();
 
                 if (!$exists) {
                     Jadwal::create([
-                        'user_id' => $item->user_id,
+                        'karyawan_id' => $item->karyawan_id,
                         'shift_id' => $item->shift_id,
                         'tanggal' => $tanggalBaru,
                         'keterangan' => $item->keterangan
@@ -101,12 +101,12 @@ class JadwalController extends Controller
     }
 
     /**
-     * Simpan jadwal baru atau update jika tanggal & user sama
+     * Simpan jadwal baru atau update jika tanggal & Karyawan sama
      */
     public function store(Request $request)
     {
         $request->validate([
-            'user_id' => 'required',
+            'karyawan_id' => 'required',
             'shift_id' => 'required',
             'tanggal' => 'required|date',
         ]);
@@ -114,7 +114,7 @@ class JadwalController extends Controller
         // Menggunakan updateOrCreate agar admin bisa mengganti shift langsung
         Jadwal::updateOrCreate(
             [
-                'user_id' => $request->user_id, 
+                'karyawan_id' => $request->karyawan_id, 
                 'tanggal' => $request->tanggal
             ],
             [
@@ -132,14 +132,14 @@ class JadwalController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'user_id' => 'required',
+            'karyawan_id' => 'required',
             'shift_id' => 'required',
             'tanggal' => 'required|date',
         ]);
 
         $jadwal = Jadwal::findOrFail($id);
         $jadwal->update([
-            'user_id' => $request->user_id,
+            'karyawan_id' => $request->karyawan_id,
             'shift_id' => $request->shift_id,
             'tanggal' => $request->tanggal,
             'keterangan' => $request->keterangan

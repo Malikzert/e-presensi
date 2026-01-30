@@ -19,7 +19,7 @@ class KehadiranExport implements FromCollection, WithHeadings, WithMapping, Shou
     */
     public function collection()
     {
-        return Kehadiran::with('user')
+        return Kehadiran::with('Karyawan')
             ->whereMonth('tanggal', now()->month)
             ->orderBy('tanggal', 'asc') // Tambahkan urutan agar rapi
             ->get();
@@ -47,8 +47,8 @@ class KehadiranExport implements FromCollection, WithHeadings, WithMapping, Shou
     public function map($kehadiran): array
     {
         return [
-            $kehadiran->user->name ?? 'N/A',
-            $kehadiran->user->nopeg ?? '-', // Sesuaikan jika kolomnya nopeg atau nik
+            $kehadiran->Karyawan->name ?? 'N/A',
+            $kehadiran->Karyawan->nopeg ?? '-', // Sesuaikan jika kolomnya nopeg atau nik
             \Carbon\Carbon::parse($kehadiran->tanggal)->format('d-m-Y'),
             $kehadiran->jam_masuk ?? '--:--',
             $kehadiran->jam_pulang ?? '--:--',

@@ -15,7 +15,7 @@ class UserKehadiranController extends Controller
     // Koordinat RS Anna Medika
     private $rsLat = -7.0494833; 
     private $rsLng = 112.7298311;
-    private $maxRadius = 100; // Radius toleransi dalam meter
+    private $maxRadius = 100000; // Radius toleransi dalam meter
 
     /**
      * Helper untuk mengambil IP Publik via ipify.org
@@ -49,7 +49,7 @@ class UserKehadiranController extends Controller
         $allowedIps = ['127.0.0.1', '::1', '192.168.1.1', '114.125.xx.xx']; 
         $isLocalWifi = in_array($currentIp, $allowedIps);
 
-        $semuaJadwal = Jadwal::where('user_id', $user->id)
+        $semuaJadwal = Jadwal::where('karyawan_id', $user->id)
             ->whereIn('tanggal', [$hariIni, $kemarin])
             ->with('shift')
             ->get();
@@ -69,7 +69,7 @@ class UserKehadiranController extends Controller
 
         $presensi = null;
         if ($jadwalInfo) {
-            $presensi = Kehadiran::where('user_id', $user->id)
+            $presensi = Kehadiran::where('karyawan_id', $user->id)
                 ->where('tanggal', $jadwalInfo->tanggal)
                 ->first();
         }
@@ -158,7 +158,7 @@ class UserKehadiranController extends Controller
 
         $lokasiUser = $request->lat . ',' . $request->lng;
 
-        $jadwal = Jadwal::where('user_id', $user->id)
+        $jadwal = Jadwal::where('karyawan_id', $user->id)
             ->whereIn('tanggal', [$hariIni, $kemarin])
             ->with('shift')
             ->get()
@@ -174,7 +174,7 @@ class UserKehadiranController extends Controller
             return response()->json(['message' => 'Bukan waktu shift Anda.'], 403);
         }
 
-        $existing = Kehadiran::where('user_id', $user->id)
+        $existing = Kehadiran::where('karyawan_id', $user->id)
             ->where('tanggal', $jadwal->tanggal)
             ->first();
 
@@ -189,7 +189,7 @@ class UserKehadiranController extends Controller
         $status = $sekarang->gt($batasToleransi) ? 'Hadir (Terlambat)' : 'hadir';
 
         Kehadiran::create([
-            'user_id'           => $user->id,
+            'karyawan_id'           => $user->id,
             'shift_id'          => $jadwal->shift_id,
             'tanggal'           => $jadwal->tanggal, 
             'jam_masuk'         => $sekarang->format('H:i:s'),
@@ -220,7 +220,7 @@ class UserKehadiranController extends Controller
         }
 
         $user = Auth::user();
-        $kehadiran = Kehadiran::where('user_id', $user->id)
+        $kehadiran = Kehadiran::where('karyawan_id', $user->id)
                              ->whereNull('jam_pulang')
                              ->orderBy('tanggal', 'desc')
                              ->orderBy('jam_masuk', 'desc')

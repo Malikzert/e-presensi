@@ -16,6 +16,7 @@ use App\Http\Controllers\UserKehadiranController; // Controller User
 use App\Http\Controllers\UserJadwalController;
 use App\Http\Controllers\RiwayatController;
 use App\Http\Controllers\UserDashboardController;
+use App\Models\KategoriPengajuan;
 
 // Halaman Depan
 Route::get('/', function () {
@@ -58,8 +59,12 @@ Route::middleware('auth')->group(function () {
 
     // Menu Pengajuan
     Route::get('/pengajuan', function () {
-        return view('pengajuan');
+        // Mengambil data kategori untuk dropdown di form
+        $kategori_pengajuans = \App\Models\KategoriPengajuan::all();
+        
+        return view('pengajuan', compact('kategori_pengajuans'));
     })->name('pengajuan');
+
     Route::post('/pengajuan/user-store', [PengajuanUserController::class, 'store'])->name('pengajuan.user.store');
 
     // Menu Pengaturan
@@ -83,8 +88,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/karyawans', [KaryawanController::class, 'index'])->name('karyawans');
     Route::post('/karyawans', [KaryawanController::class, 'store'])->name('karyawans.store');
     Route::post('/karyawans/{id}/handle-delete', [KaryawanController::class, 'handleDeletion'])->name('karyawans.handle-delete');
-    Route::put('/karyawans/{user}', [KaryawanController::class, 'update'])->name('karyawans.update'); 
-    Route::delete('/karyawans/{user}', [KaryawanController::class, 'destroy'])->name('karyawans.destroy');
+    Route::put('/karyawans/{karyawan}', [KaryawanController::class, 'update'])->name('karyawans.update'); 
+    Route::delete('/karyawans/{karyawan}', [KaryawanController::class, 'destroy'])->name('karyawans.destroy');
     Route::get('/UnitJabatan', [UJController::class, 'index'])->name('UnitJabatan');
 
     Route::post('/jabatans', [UJController::class, 'storeJabatan'])->name('jabatans.store');

@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+/** PERBAIKAN: Gunakan model Karyawan **/
+use App\Models\Karyawan; 
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,32 +25,35 @@ class RegisteredUserController extends Controller
 
     /**
      * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'nik' => ['required', 'string', 'max:20', 'unique:users,nik'], // Validasi NIK wajib & unik
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            /** PERBAIKAN: Validasi unik merujuk ke tabel karyawans **/
+            'nik' => ['required', 'string', 'max:20', 'unique:karyawans,nik'], 
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:karyawans,email'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        $user = User::create([
+        /** PERBAIKAN: Simpan ke model Karyawan **/
+        $karyawan = Karyawan::create([
             'name' => $request->name,
             'email' => $request->email,
             'nik' => $request->nik,
             'password' => Hash::make($request->password),
-            'jabatan' => 'Default', // Default jabatan
+            'jabatan' => 'Karyawan', // Default jabatan lebih profesional
             'is_admin' => 0,
+            'status' => 'aktif', // Pastikan status default terisi jika diperlukan
         ]);
 
-        event(new Registered($user));
+        event(new Registered($karyawan));
 
-        // Langsung aktifkan Remember Me 1 Bulan
-        Auth::login($user, true);
+        // Langsung aktifkan Remember Me agar user tetap login
+        Auth::login($karyawan, true);
 
+        // Jika Anda menggunakan verifikasi email, arahkan ke notice
+        // Jika tidak, bisa langsung ke dashboard
         return redirect()->route('verification.notice');
     }
 }

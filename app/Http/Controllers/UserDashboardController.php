@@ -19,17 +19,17 @@ class UserDashboardController extends Controller
         $now = Carbon::now();
 
         // 1. Data Status Hari Ini
-        $presensiHariIni = Kehadiran::where('user_id', $user->id)
+        $presensiHariIni = Kehadiran::where('karyawan_id', $user->id)
             ->whereDate('tanggal', Carbon::today())
             ->first();
 
         // 2. Hitung Rata-rata Bulanan
-        $totalJadwalBulanIni = Jadwal::where('user_id', $user->id)
+        $totalJadwalBulanIni = Jadwal::where('karyawan_id', $user->id)
             ->whereMonth('tanggal', $now->month)
             ->whereYear('tanggal', $now->year)
             ->count() ?: 1;
 
-        $hadirBulanIni = Kehadiran::where('user_id', $user->id)
+        $hadirBulanIni = Kehadiran::where('karyawan_id', $user->id)
             ->whereMonth('tanggal', $now->month)
             ->whereYear('tanggal', $now->year)
             ->whereIn('status', ['Hadir', 'Alpha', 'Hadir (Terlambat)', 'Izin', 'Sakit'])
@@ -38,21 +38,21 @@ class UserDashboardController extends Controller
         $monthlyRate = round(($hadirBulanIni / $totalJadwalBulanIni) * 100);
 
         // 3. Performa Tahunan
-        $hadirTahunIni = Kehadiran::where('user_id', $user->id)
+        $hadirTahunIni = Kehadiran::where('karyawan_id', $user->id)
             ->whereYear('tanggal', $now->year)
             ->count();
-        $totalJadwalTahunIni = Jadwal::where('user_id', $user->id)
+        $totalJadwalTahunIni = Jadwal::where('karyawan_id', $user->id)
             ->whereYear('tanggal', $now->year)
             ->count() ?: 1;
         $yearlyRate = round(($hadirTahunIni / $totalJadwalTahunIni) * 100);
 
         // 4. Log Terakhir (5 Aktivitas Terbaru)
-        $logs = Kehadiran::where('user_id', $user->id)
+        $logs = Kehadiran::where('karyawan_id', $user->id)
             ->latest('tanggal')
             ->latest('created_at')
             ->take(5)
             ->get();
-        $totalIzinSakit = Kehadiran::where('user_id', $user->id)
+        $totalIzinSakit = Kehadiran::where('karyawan_id', $user->id)
             ->whereYear('tanggal', $now->year)
             ->whereIn('status', ['Izin', 'Sakit'])
             ->count();
@@ -77,7 +77,7 @@ class UserDashboardController extends Controller
         for ($i = 6; $i >= 0; $i--) {
             $day = Carbon::now()->subDays($i);
             $weeklyLabels[] = $day->isoFormat('ddd'); 
-            $weeklyData[] = Kehadiran::where('user_id', $userId)
+            $weeklyData[] = Kehadiran::where('karyawan_id', $userId)
                 ->whereDate('tanggal', $day->toDateString())
                 ->count();
         }
@@ -88,7 +88,7 @@ class UserDashboardController extends Controller
         for ($i = 5; $i >= 0; $i--) {
             $month = Carbon::now()->subMonths($i);
             $monthlyLabels[] = $month->format('M');
-            $monthlyData[] = Kehadiran::where('user_id', $userId)
+            $monthlyData[] = Kehadiran::where('karyawan_id', $userId)
                 ->whereMonth('tanggal', $month->month)
                 ->whereYear('tanggal', $month->year)
                 ->count();
@@ -100,7 +100,7 @@ class UserDashboardController extends Controller
         for ($i = 2; $i >= 0; $i--) {
             $year = Carbon::now()->subYears($i);
             $yearlyLabels[] = $year->format('Y');
-            $yearlyData[] = Kehadiran::where('user_id', $userId)
+            $yearlyData[] = Kehadiran::where('karyawan_id', $userId)
                 ->whereYear('tanggal', $year->year)
                 ->count();
         }
@@ -115,7 +115,7 @@ class UserDashboardController extends Controller
     public function downloadPdf()
     {
         $user = Auth::user();
-        $data = Kehadiran::where('user_id', $user->id)
+        $data = Kehadiran::where('karyawan_id', $user->id)
             ->latest('tanggal')
             ->get();
 

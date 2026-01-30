@@ -12,7 +12,7 @@ class Kehadiran extends Model
     protected $table = 'kehadirans';
 
     protected $fillable = [
-        'user_id',
+        'karyawan_id',
         'shift_id',
         'tanggal',
         'jam_masuk',
@@ -24,10 +24,10 @@ class Kehadiran extends Model
         'status'
     ];
 
-    // Relasi ke User
-    public function user()
+    // Relasi ke Karyawan
+    public function Karyawan()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(Karyawan::class, 'karyawan_id');
     }
     public function shift()
     {

@@ -22,7 +22,7 @@ class UserJadwalController extends Controller
 
         // Ambil data jadwal berdasarkan user, bulan, dan tahun
         $jadwalUser = Jadwal::with(['shift'])
-            ->where('user_id', $user->id)
+            ->where('karyawan_id', $user->id)
             ->whereMonth('tanggal', $bulan)
             ->whereYear('tanggal', $tahun)
             ->orderBy('tanggal', 'asc')

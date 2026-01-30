@@ -11,18 +11,18 @@ class Jadwal extends Model
 
     // Menentukan kolom mana saja yang boleh diisi secara massal
     protected $fillable = [
-        'user_id',
+        'karyawan_id',
         'shift_id',
         'tanggal',
         'keterangan'
     ];
 
     /**
-     * Relasi ke Model User (Karyawan)
+     * Relasi ke Model Karyawan (Karyawan)
      */
-    public function user()
+    public function Karyawan()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Karyawan::class);
     }
 
     /**
