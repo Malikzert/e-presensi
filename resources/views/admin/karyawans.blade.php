@@ -10,13 +10,14 @@
 
     <div class="relative z-10 py-12 min-h-screen" 
          x-data="{ 
+            tab: 'karyawan',
             openModal: false, 
             editMode: false, 
             deleteModal: false, 
             modalJabatan: false,
             modalUnit: false,
             deleteAction: '', 
-            currentKaryawan: { name: '', nik: '', nopeg: '', gender: '', jabatan_id: '', email: '', foto: '', units: [] } 
+            currentKaryawan: { id: '', name: '', nik: '', nopeg: '', gender: '', jabatan_id: '', email: '', foto: '', units: [], is_admin: 0 } 
          }">
         
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -31,7 +32,7 @@
                     Kelola Unit & Jabatan
                 </a>
 
-                <button @click="openModal = true; editMode = false; currentKaryawan = {name:'', nik:'', nopeg:'', gender:'', jabatan_id:'', email:'', foto: 'default.jpg', units: []}" 
+                <button @click="openModal = true; editMode = false; currentKaryawan = {name:'', nik:'', nopeg:'', gender:'', jabatan_id:'', email:'', foto: 'default.jpg', units: [], is_admin: 0}" 
                         class="bg-emerald-600 text-white px-8 py-3 rounded-2xl font-black text-sm shadow-xl shadow-emerald-200 flex items-center gap-2 hover:bg-emerald-700 transition-all">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -40,8 +41,8 @@
                 </button>
             </div>
 
-            <div class="mb-8">
-                <form action="{{ route('admin.karyawans') }}" method="GET" class="relative max-w-md">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <form action="{{ route('admin.karyawans') }}" method="GET" class="relative max-w-md w-full">
                     <input type="text" 
                         name="search" 
                         value="{{ request('search') }}"
@@ -51,17 +52,26 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                     </div>
                 </form>
+
+                <div class="flex bg-white/50 backdrop-blur p-1 rounded-2xl border border-emerald-100">
+                    <button @click="tab = 'karyawan'" :class="tab === 'karyawan' ? 'bg-emerald-600 text-white shadow-lg' : 'text-emerald-600 hover:bg-emerald-50'" class="px-6 py-2 rounded-xl font-black text-xs transition-all">KARYAWAN</button>
+                    <button @click="tab = 'admin'" :class="tab === 'admin' ? 'bg-emerald-600 text-white shadow-lg' : 'text-emerald-600 hover:bg-emerald-50'" class="px-6 py-2 rounded-xl font-black text-xs transition-all">ADMIN</button>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 @forelse($karyawans as $karyawan)
-                <div class="bg-white/80 backdrop-blur-md p-6 rounded-[35px] border {{ $karyawan->delete_requested_at ? 'border-rose-400' : 'border-emerald-100' }} shadow-xl relative overflow-hidden group hover:border-emerald-400 transition-all">
+                <div x-show="tab === '{{ $karyawan->is_admin ? 'admin' : 'karyawan' }}'" 
+                     class="bg-white/80 backdrop-blur-md p-6 rounded-[35px] border {{ $karyawan->delete_requested_at ? 'border-rose-400' : 'border-emerald-100' }} shadow-xl relative overflow-hidden group hover:border-emerald-400 transition-all">
                     
-                    {{-- Badge Indikator Minta Hapus --}}
                     @if($karyawan->delete_requested_at)
                         <div class="absolute top-0 right-0 bg-rose-500 text-white text-[9px] px-4 py-1.5 rounded-bl-2xl font-black animate-pulse z-10 shadow-lg">
                             PERMINTAAN HAPUS AKUN
                         </div>
+                    @endif
+
+                    @if($karyawan->is_admin)
+                        <div class="absolute top-0 left-0 bg-emerald-100 text-emerald-700 text-[8px] px-3 py-1 rounded-br-xl font-black">ADMIN SISTEM</div>
                     @endif
 
                     <div class="flex items-center gap-4">
@@ -88,7 +98,6 @@
 
                         <div class="flex gap-2">
                             @if($karyawan->delete_requested_at)
-                                {{-- TOMBOL KHUSUS PERSETUJUAN HAPUS --}}
                                 <form action="{{ route('admin.karyawans.handle-delete', $karyawan->id) }}" method="POST" class="inline">
                                     @csrf
                                     <input type="hidden" name="action" value="reject">
@@ -101,7 +110,6 @@
                                     Setujui Hapus
                                 </button>
                             @else
-                                {{-- TOMBOL NORMAL EDIT & HAPUS --}}
                                 <button @click="openModal = true; editMode = true; currentKaryawan = {
                                     id: '{{ $karyawan->id }}',
                                     name: '{{ $karyawan->name }}',
@@ -110,6 +118,7 @@
                                     gender: '{{ $karyawan->gender }}',
                                     email: '{{ $karyawan->email }}',
                                     jabatan_id: '{{ $karyawan->jabatan_id }}',
+                                    is_admin: '{{ $karyawan->is_admin }}',
                                     foto: '{{ $karyawan->foto }}',
                                     units: {{ $karyawan->units->pluck('id') }}
                                 }" 
@@ -124,7 +133,7 @@
                 </div>
                 @empty
                 <div class="col-span-3 text-center py-20 bg-white/50 rounded-[35px] border-2 border-dashed border-emerald-200">
-                    <p class="text-emerald-800 font-bold">Belum ada data karyawan.</p>
+                    <p class="text-emerald-800 font-bold">Belum ada data pada kategori ini.</p>
                 </div>
                 @endforelse
             </div>
@@ -136,7 +145,7 @@
 
         <div x-show="openModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-emerald-900/40 backdrop-blur-sm">
             <div @click.away="openModal = false" class="bg-white rounded-[40px] p-8 w-full max-w-md shadow-2xl border border-emerald-100 overflow-y-auto max-h-[90vh]">
-                <h3 class="text-2xl font-black text-emerald-900 mb-6" x-text="editMode ? 'Edit Karyawan' : 'Tambah Karyawan'"></h3>
+                <h3 class="text-2xl font-black text-emerald-900 mb-6" x-text="editMode ? 'Edit Pengguna' : 'Tambah Pengguna'"></h3>
                 
                 <form :action="editMode ? `/admin/karyawans/${currentKaryawan.id}` : '{{ route('admin.karyawans.store') }}'" 
                       method="POST" enctype="multipart/form-data" class="space-y-4">
@@ -171,18 +180,26 @@
                             </select>
                         </div>
                         <div>
-                            <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Jabatan</label>
-                            <select name="jabatan_id" x-model="currentKaryawan.jabatan_id" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3 text-sm focus:ring-emerald-500 shadow-inner" required>
-                                <option value="">Pilih Jabatan</option>
-                                @foreach($jabatans as $j)
-                                    <option value="{{ $j->id }}">{{ $j->nama_jabatan }}</option>
-                                @endforeach
+                            <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Role Akses</label>
+                            <select name="is_admin" x-model="currentKaryawan.is_admin" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3 text-sm focus:ring-emerald-500 shadow-inner" required>
+                                <option value="0">Karyawan</option>
+                                <option value="1">Admin</option>
                             </select>
                         </div>
                     </div>
 
                     <div>
-                        <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Unit Kerja (Bisa Rangkap)</label>
+                        <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Jabatan</label>
+                        <select name="jabatan_id" x-model="currentKaryawan.jabatan_id" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3 text-sm focus:ring-emerald-500 shadow-inner" required>
+                            <option value="">Pilih Jabatan</option>
+                            @foreach($jabatans as $j)
+                                <option value="{{ $j->id }}">{{ $j->nama_jabatan }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Unit Kerja</label>
                         <div class="grid grid-cols-2 gap-2 mt-2 bg-emerald-50/30 p-4 rounded-2xl border border-emerald-100 max-h-40 overflow-y-auto shadow-inner">
                             @foreach($units as $u)
                                 <label class="flex items-center gap-2 cursor-pointer group">
@@ -211,7 +228,7 @@
                                  class="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-100 shadow-sm"
                                  onerror="this.src='/images/users/default.jpg'">
                             <div class="flex-1">
-                                <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Foto Karyawan</label>
+                                <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Foto</label>
                                 <input type="file" name="foto" class="w-full text-[10px] text-gray-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-black file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200">
                             </div>
                         </div>
@@ -266,38 +283,38 @@
         </div>
 
         <div x-show="deleteModal" x-cloak class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-rose-900/20 backdrop-blur-sm">
-    <div @click.away="deleteModal = false" class="bg-white rounded-[40px] p-8 w-full max-w-sm shadow-2xl border border-rose-100 text-center">
-        <div :class="deleteAction.includes('handle-delete') ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'" 
-             class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path x-show="!deleteAction.includes('handle-delete')" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                <path x-show="deleteAction.includes('handle-delete')" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-        </div>
+            <div @click.away="deleteModal = false" class="bg-white rounded-[40px] p-8 w-full max-w-sm shadow-2xl border border-rose-100 text-center">
+                <div :class="deleteAction.includes('handle-delete') ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'" 
+                     class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path x-show="!deleteAction.includes('handle-delete')" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        <path x-show="deleteAction.includes('handle-delete')" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
 
-        <h3 class="text-xl font-black text-gray-900 mb-2" 
-            x-text="deleteAction.includes('handle-delete') ? 'Setujui Hapus?' : 'Hapus Karyawan?'"></h3>
-        
-        <p class="text-sm text-gray-500 mb-8" 
-           x-text="deleteAction.includes('handle-delete') ? 'Akun ini akan dihapus permanen sesuai permintaan user.' : 'Tindakan ini tidak dapat dibatalkan.'"></p>
-        
-        <div class="flex gap-3">
-            <button type="button" @click="deleteModal = false" class="flex-1 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-all">Batal</button>
-            
-            <form :action="deleteAction" method="POST" class="flex-1">
-                @csrf
-                <template x-if="!deleteAction.includes('handle-delete')">
-                    <input type="hidden" name="_method" value="DELETE">
-                </template>
+                <h3 class="text-xl font-black text-gray-900 mb-2" 
+                    x-text="deleteAction.includes('handle-delete') ? 'Setujui Hapus?' : 'Hapus Data?'"></h3>
+                
+                <p class="text-sm text-gray-500 mb-8" 
+                   x-text="deleteAction.includes('handle-delete') ? 'Akun ini akan dihapus permanen sesuai permintaan user.' : 'Tindakan ini tidak dapat dibatalkan.'"></p>
+                
+                <div class="flex gap-3">
+                    <button type="button" @click="deleteModal = false" class="flex-1 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-all">Batal</button>
+                    
+                    <form :action="deleteAction" method="POST" class="flex-1">
+                        @csrf
+                        <template x-if="!deleteAction.includes('handle-delete')">
+                            <input type="hidden" name="_method" value="DELETE">
+                        </template>
 
-                <button type="submit" 
-                        :class="deleteAction.includes('handle-delete') ? 'bg-emerald-600 shadow-emerald-200' : 'bg-rose-600 shadow-rose-200'"
-                        class="w-full py-3 text-white rounded-2xl font-black shadow-lg transition-all"
-                        x-text="deleteAction.includes('handle-delete') ? 'Ya, Setujui' : 'Ya, Hapus'">
-                </button>
-            </form>
+                        <button type="submit" 
+                                :class="deleteAction.includes('handle-delete') ? 'bg-emerald-600 shadow-emerald-200' : 'bg-rose-600 shadow-rose-200'"
+                                class="w-full py-3 text-white rounded-2xl font-black shadow-lg transition-all"
+                                x-text="deleteAction.includes('handle-delete') ? 'Ya, Setujui' : 'Ya, Hapus'">
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
     </div>
 </x-app-layout>
