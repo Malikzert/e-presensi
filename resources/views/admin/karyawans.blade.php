@@ -17,7 +17,7 @@
             modalJabatan: false,
             modalUnit: false,
             deleteAction: '', 
-            currentKaryawan: { id: '', name: '', nik: '', nopeg: '', gender: '', jabatan_id: '', email: '', foto: '', units: [], is_admin: 0 } 
+            currentKaryawan: { id: '', name: '', nik: '', nopeg: '', gender: '', jabatan_id: '', kuota_cuti: '', email: '', foto: '', units: [], is_admin: 0 } 
          }">
         
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -117,6 +117,7 @@
                                     nopeg: '{{ $karyawan->nopeg }}',
                                     gender: '{{ $karyawan->gender }}',
                                     email: '{{ $karyawan->email }}',
+                                    kuota_cuti: '{{ $karyawan->kuota_cuti }}',
                                     jabatan_id: '{{ $karyawan->jabatan_id }}',
                                     is_admin: '{{ $karyawan->is_admin }}',
                                     foto: '{{ $karyawan->foto }}',
@@ -188,14 +189,27 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Jabatan</label>
-                        <select name="jabatan_id" x-model="currentKaryawan.jabatan_id" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3 text-sm focus:ring-emerald-500 shadow-inner" required>
-                            <option value="">Pilih Jabatan</option>
-                            @foreach($jabatans as $j)
-                                <option value="{{ $j->id }}">{{ $j->nama_jabatan }}</option>
-                            @endforeach
-                        </select>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Jabatan</label>
+                            <select name="jabatan_id" x-model="currentKaryawan.jabatan_id" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3 text-sm focus:ring-emerald-500 shadow-inner" required>
+                                <option value="">Pilih Jabatan</option>
+                                @foreach($jabatans as $j)
+                                    <option value="{{ $j->id }}">{{ $j->nama_jabatan }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Kuota Cuti</label>
+                            <input type="number" 
+                                name="kuota_cuti" 
+                                x-model="currentKaryawan.kuota_cuti" 
+                                class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3 text-sm focus:ring-emerald-500 shadow-inner" 
+                                placeholder="0" 
+                                min="0"
+                                required>
+                        </div>
                     </div>
 
                     <div>

@@ -82,6 +82,7 @@ class KaryawanController extends Controller
             'nopeg' => 'required|unique:karyawans,nopeg',
             'gender' => 'required|in:Laki-laki,Perempuan',
             'jabatan_id' => 'required|exists:jabatans,id',
+            'kuota_cuti' => 'required|integer|min:0',
             'is_admin' => 'required|boolean', // Validasi input is_admin
             'unit_ids' => 'required|array',
             'unit_ids.*' => 'exists:units,id',
@@ -114,6 +115,7 @@ class KaryawanController extends Controller
             'nopeg' => 'required|unique:karyawans,nopeg,' . $karyawan->id,
             'gender' => 'required|in:Laki-laki,Perempuan',
             'jabatan_id' => 'required|exists:jabatans,id',
+            'kuota_cuti' => 'required|integer|min:0',
             'is_admin' => 'required|boolean', // Validasi input is_admin
             'unit_ids' => 'required|array',
             'unit_ids.*' => 'exists:units,id',
