@@ -1,13 +1,11 @@
 <x-app-layout>
     <style>
         [x-cloak] { display: none !important; }
-        /* Style tambahan agar scrollbar horizontal tetap cantik */
         .custom-scrollbar::-webkit-scrollbar { height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
     </style>
 
-    {{-- Background Image & Gradient --}}
     <div class="fixed inset-0 z-0">
         <img src="{{ asset('images/rsanna.jpg') }}" class="w-full h-full object-cover opacity-15">
         <div class="absolute inset-0 bg-gradient-to-tr from-emerald-100/40 via-transparent to-white/60"></div>
@@ -17,36 +15,41 @@
          x-data="{ 
             openModal: false, 
             openAutofillModal: false,
+            openShiftModal: false,
             editMode: false, 
             deleteModal: false, 
             deleteAction: '', 
-            currentJadwal: { id: '', karyawan_id: '', shift_id: '', tanggal: '' } 
+            currentJadwal: { id: '', karyawan_id: '', shift_id: '', tanggal: '' },
+            currentShift: { id: '', nama_shift: '', jam_masuk: '', jam_pulang: '' }
          }">
         
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            {{-- Bagian Navigasi --}}
             @include('admin.navs', ['title' => 'Manajemen Jadwal & Shift'])
 
-            {{-- Alert Success --}}
             @if(session('success'))
                 <div class="mb-4 p-4 bg-emerald-600 text-white rounded-2xl shadow-lg font-bold text-sm">
                     {{ session('success') }}
                 </div>
             @endif
 
-            {{-- Header Area & Button --}}
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 mt-6">
                 <div>
                     <h2 class="text-xl font-black text-emerald-900 tracking-tight">Data Plotting</h2>
                     <p class="text-emerald-600 font-bold text-xs uppercase tracking-widest opacity-70">Pengaturan Shift RSU ANNA MEDIKA</p>
                 </div>
                 
-                <div class="flex gap-3">
-                    {{-- Tombol Autofill --}}
+                <div class="flex flex-wrap gap-3">
                     <button @click="openAutofillModal = true" 
                             class="bg-white text-emerald-700 border-2 border-emerald-100 px-6 py-3 rounded-2xl font-black text-sm shadow-sm flex items-center gap-2 hover:border-emerald-500 transition-all">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        Auto-Fill Jadwal
+                        Auto-Fill
+                    </button>
+
+                    {{-- Tombol Kelola Shift Baru --}}
+                    <button @click="openShiftModal = true" 
+                            class="bg-white text-emerald-700 border-2 border-emerald-100 px-6 py-3 rounded-2xl font-black text-sm shadow-sm flex items-center gap-2 hover:border-emerald-500 transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Kelola Shift
                     </button>
 
                     <button @click="openModal = true; editMode = false; currentJadwal = { karyawan_id: '', shift_id: '', tanggal: '' }" 
@@ -101,7 +104,6 @@
                                     @php
                                         $currentDate = \Carbon\Carbon::parse($bulanInput)->day($d)->format('Y-m-d');
                                         $jadwalHariIni = $karyawan->jadwals->firstWhere('tanggal', $currentDate);
-                                        
                                         $inisial = '';
                                         $bgColor = 'bg-gray-50 text-gray-300';
                                         
@@ -131,14 +133,7 @@
                                 @endfor
                             </tr>
                             @empty
-                            <tr>
-                                <td colspan="{{ $daysInMonth + 1 }}" class="px-8 py-20 text-center">
-                                    <div class="flex flex-col items-center opacity-30">
-                                        <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                        <p class="font-black text-lg">Karyawan tidak ditemukan</p>
-                                    </div>
-                                </td>
-                            </tr>
+                            <tr><td colspan="{{ $daysInMonth + 1 }}" class="px-8 py-20 text-center italic opacity-30">Karyawan tidak ditemukan</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -155,9 +150,68 @@
                     <div class="flex items-center gap-1.5 text-[9px] font-bold text-gray-600"><span class="w-3 h-3 bg-sky-100 border border-sky-200 rounded-sm"></span> MIDDLE</div>
                     <div class="flex items-center gap-1.5 text-[9px] font-bold text-gray-600"><span class="w-3 h-3 bg-rose-100 border border-rose-200 rounded-sm"></span> LIBUR</div>
                 </div>
+                <div>{{ $karyawans->appends(request()->query())->links() }}</div>
+            </div>
+        </div>
 
-                <div class="w-full md:w-auto">
-                    {{ $karyawans->appends(request()->query())->links() }}
+        {{-- Modal Kelola Shift (BARU) --}}
+        <div x-show="openShiftModal" x-cloak class="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-emerald-900/40 backdrop-blur-sm">
+            <div @click.away="openShiftModal = false" class="bg-white rounded-[40px] p-8 w-full max-w-2xl shadow-2xl border border-emerald-100 overflow-hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-2xl font-black text-emerald-900">Konfigurasi Shift</h3>
+                    <button @click="openShiftModal = false" class="text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                </div>
+
+                <form action="{{ route('admin.shift.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-8 bg-emerald-50 p-6 rounded-[30px] border border-emerald-100">
+                    @csrf
+                    <input type="hidden" name="shift_id" x-model="currentShift.id">
+                    <div class="md:col-span-2">
+                        <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Nama Shift</label>
+                        <input type="text" name="nama_shift" x-model="currentShift.nama_shift" placeholder="Contoh: Pagi 1" class="w-full rounded-xl border-emerald-100 p-2.5 text-sm font-bold" required>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Masuk</label>
+                        <input type="time" name="jam_masuk" x-model="currentShift.jam_masuk" class="w-full rounded-xl border-emerald-100 p-2.5 text-sm font-bold" required>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Pulang</label>
+                        <input type="time" name="jam_pulang" x-model="currentShift.jam_pulang" class="w-full rounded-xl border-emerald-100 p-2.5 text-sm font-bold" required>
+                    </div>
+                    <button type="submit" class="md:col-span-4 bg-emerald-600 text-white py-3 rounded-xl font-black text-xs shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition-all">
+                        Simpan Master Shift
+                    </button>
+                    <template x-if="currentShift.id">
+                        <button type="button" @click="currentShift = { id: '', nama_shift: '', jam_masuk: '', jam_pulang: '' }" class="md:col-span-4 text-[10px] font-bold text-emerald-500 underline uppercase">Batal Edit / Reset Form</button>
+                    </template>
+                </form>
+
+                <div class="max-h-[300px] overflow-y-auto custom-scrollbar">
+                    <table class="w-full text-left">
+                        <thead class="sticky top-0 bg-white">
+                            <tr class="text-[10px] font-black text-emerald-400 uppercase tracking-widest border-b border-emerald-50">
+                                <th class="pb-3 pl-2">Nama Shift</th>
+                                <th class="pb-3 text-center">Waktu</th>
+                                <th class="pb-3 text-right pr-2">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-emerald-50">
+                            @foreach($shifts as $s)
+                            <tr class="group hover:bg-indigo-50/30 transition-all">
+                                <td class="py-4 font-black text-sm text-indigo-900 pl-2 uppercase">{{ $s->nama_shift }}</td>
+                                <td class="py-4 text-center"><span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-black">{{ $s->jam_masuk }} - {{ $s->jam_pulang }}</span></td>
+                                <td class="py-4 text-right pr-2">
+                                    <div class="flex justify-end gap-2">
+                                        <button @click="currentShift = { id: '{{ $s->id }}', nama_shift: '{{ $s->nama_shift }}', jam_masuk: '{{ $s->jam_masuk }}', jam_pulang: '{{ $s->jam_pulang }}' }" class="p-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>
+                                        <form action="{{ route('admin.shift.destroy', $s->id) }}" method="POST" onsubmit="return confirm('Hapus shift ini?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -170,7 +224,6 @@
                         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     </div>
                     <h3 class="text-2xl font-black text-emerald-900">Auto-Fill Jadwal</h3>
-                    <p class="text-sm text-gray-500">Salin pola shift karyawan dari bulan sebelumnya ke bulan ini secara otomatis.</p>
                 </div>
 
                 <form action="{{ route('admin.jadwals.autofill') }}" method="POST" class="space-y-4">
@@ -180,14 +233,7 @@
                         <input type="month" name="dari_bulan" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3.5 text-sm font-bold" required value="{{ \Carbon\Carbon::parse($bulanInput)->subMonth()->format('Y-m') }}">
                         <input type="hidden" name="ke_bulan" value="{{ $bulanInput }}">
                     </div>
-                    
-                    <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100">
-                        <p class="text-[10px] text-amber-700 font-bold leading-relaxed">
-                            <span class="block text-xs mb-1">⚠️ INFO:</span>
-                            Hanya mengisi tanggal yang masih kosong. Jadwal yang sudah ada tidak akan tertimpa.
-                        </p>
-                    </div>
-
+                    <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100 text-[10px] text-amber-700 font-bold uppercase leading-relaxed">⚠️ Hanya mengisi tanggal kosong.</div>
                     <div class="flex gap-3 mt-6">
                         <button type="button" @click="openAutofillModal = false" class="flex-1 py-3.5 rounded-2xl font-bold text-gray-500 hover:bg-gray-100 transition-all">Batal</button>
                         <button type="submit" class="flex-1 py-3.5 bg-emerald-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-200">Eksekusi</button>
@@ -216,7 +262,7 @@
                         <label class="text-[10px] font-black uppercase text-emerald-600 ml-2">Karyawan</label>
                         <select name="karyawan_id" x-model="currentJadwal.karyawan_id" class="w-full rounded-2xl border-emerald-100 bg-emerald-50/50 p-3.5 text-sm font-bold" required>
                             <option value="">-- Pilih Karyawan --</option>
-                            @foreach($karyawans as $Karyawan)<option value="{{ $Karyawan->id }}">{{ $Karyawan->name }}</option>@endforeach
+                            @foreach($Karyawans as $Karyawan)<option value="{{ $Karyawan->id }}">{{ $Karyawan->name }}</option>@endforeach
                         </select>
                     </div>
                     <div>
@@ -240,13 +286,12 @@
 
         {{-- Modal Delete --}}
         <div x-show="deleteModal" x-cloak class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-rose-900/20 backdrop-blur-sm">
-            <div @click.away="deleteModal = false" class="bg-white rounded-[40px] p-8 w-full max-w-sm shadow-2xl border border-rose-100 text-center">
+            <div @click.away="deleteModal = false" class="bg-white rounded-[40px] p-8 w-full max-sm shadow-2xl border border-rose-100 text-center">
                 <div class="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6">
                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 </div>
                 <h3 class="text-xl font-black text-gray-900 mb-2">Hapus Jadwal?</h3>
-                <p class="text-sm text-gray-500 mb-6">Data jadwal pada tanggal tersebut akan dihapus permanen.</p>
-                <div class="flex gap-3">
+                <div class="flex gap-3 mt-6">
                     <button type="button" @click="deleteModal = false" class="flex-1 py-3 rounded-2xl font-bold text-gray-500 hover:bg-gray-100">Batal</button>
                     <form :action="deleteAction" method="POST" class="flex-1">@csrf @method('DELETE')<button type="submit" class="w-full py-3 bg-rose-600 text-white rounded-2xl font-black">Hapus</button></form>
                 </div>

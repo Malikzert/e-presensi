@@ -112,6 +112,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/jadwals/{id}', [JadwalController::class, 'update'])->name('jadwals.update');
     Route::delete('/jadwals/{id}', [JadwalController::class, 'destroy'])->name('jadwals.destroy');
     Route::post('/jadwals/autofill', [JadwalController::class, 'autofill'])->name('jadwals.autofill');
+    Route::post('/jadwal/shift/store', [JadwalController::class, 'storeShift'])->name('shift.store');
+    Route::delete('/jadwal/shift/destroy/{id}', [JadwalController::class, 'destroyShift'])->name('shift.destroy');
 
     // Pengajuan
     Route::get('/pengajuans', [PengajuanController::class, 'index'])->name('pengajuans');

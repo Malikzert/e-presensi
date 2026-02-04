@@ -52,7 +52,35 @@ class JadwalController extends Controller
             'bulanInput'
         ));
     }
+    public function storeShift(Request $request)
+    {
+        $request->validate([
+            'nama_shift' => 'required',
+            'jam_masuk'  => 'required',
+            'jam_pulang' => 'required',
+        ]);
 
+        Shift::updateOrCreate(
+            ['id' => $request->shift_id], // Jika ada ID maka update, jika tidak maka create
+            [
+                'nama_shift' => $request->nama_shift,
+                'jam_masuk'  => $request->jam_masuk,
+                'jam_pulang' => $request->jam_pulang,
+            ]
+        );
+
+        return back()->with('success', 'Data Shift berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus Shift
+     */
+    public function destroyShift($id)
+    {
+        $shift = Shift::findOrFail($id);
+        $shift->delete();
+        return back()->with('success', 'Shift berhasil dihapus.');
+    }
     /**
      * Fitur Auto-fill Jadwal dari bulan sebelumnya
      */
