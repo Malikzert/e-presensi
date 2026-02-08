@@ -35,7 +35,7 @@ class KaryawanController extends Controller
         if ($request->filter == 'delete_request') {
             $query->whereNotNull('delete_requested_at');
         }
-
+        $admins = Karyawan::where('is_admin', 1)->get();
         $karyawans = $query->latest()->paginate(12); // Ditingkatkan ke 12 agar grid 3 kolom simetris
         
         $jabatans = Jabatan::all();

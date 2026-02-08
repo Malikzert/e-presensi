@@ -11,12 +11,13 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @php
-            // Logika Penentuan Warna: Biru untuk Admin, Hijau untuk User/Guest
-            $isAdmin = auth()->check() && auth()->user()->is_admin;
-            $themeColor = $isAdmin ? 'blue' : 'green';
-            $bgColor = $isAdmin ? '#f0f9ff' : '#f0fdf4'; // Light Blue vs Light Green
-            $patternColor = $isAdmin ? '%233b82f6' : '%2322c55e'; // Blue-500 vs Green-500
-        @endphp
+    // Cek apakah user adalah admin ATAU sedang berada di prefix URL admin
+    $isAdmin = (auth()->check() && auth()->user()->is_admin) || request()->is('admin*');
+    
+    $themeColor = $isAdmin ? 'blue' : 'green';
+    $bgColor = $isAdmin ? '#f0f9ff' : '#f0fdf4';
+    $patternColor = $isAdmin ? '%233b82f6' : '%2322c55e';
+@endphp
 
         <style>
             [x-cloak] { display: none !important; }
