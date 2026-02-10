@@ -13,6 +13,17 @@ use Illuminate\Support\Facades\Http;
 
 class KehadiranController extends Controller
 {
+    // Daftar IP yang diperbolehkan (Sesuaikan dengan IP Publik RS Anda)
+    protected $allowedIps = ['127.0.0.1', '192.168.1.1']; 
+
+    /**
+     * Privat fungsi untuk validasi IP
+     */
+    private function isIpAllowed($ip)
+    {
+        return in_array($ip, $this->allowedIps);
+    }
+
     public function index(Request $request)
     {
         $query = Kehadiran::with('Karyawan');
@@ -27,7 +38,6 @@ class KehadiranController extends Controller
             $query->whereDate('tanggal', $request->date);
         }
 
-        // Memperbaiki pagination agar tidak double call
         $kehadirans = $query->orderBy('tanggal', 'desc')->paginate(10)->withQueryString();
         
         $karyawans = Karyawan::where('is_admin', false)->get();
@@ -38,6 +48,11 @@ class KehadiranController extends Controller
 
     public function store(Request $request)
     {
+        // --- VALIDASI IP ---
+        if (!$this->isIpAllowed($request->ip())) {
+            return back()->with('error', 'Akses ditolak. Anda harus terhubung ke jaringan WiFi Kantor untuk menambah data.');
+        }
+
         $request->validate([
             'karyawan_id' => 'required',
             'shift_id' => 'required',
@@ -57,14 +72,12 @@ class KehadiranController extends Controller
 
         $data = $request->all();
         
-        // --- LOGIKA TOLERANSI 15 MENIT ---
         $shift = Shift::find($request->shift_id);
         if ($shift && in_array($request->status, ['Hadir', 'Hadir (Terlambat)', 'hadir'])) {
             $jamMasukShift = Carbon::parse($request->tanggal . ' ' . $shift->jam_masuk);
             $batasTerlambat = $jamMasukShift->copy()->addMinutes(15);
             $jamInputKaryawan = Carbon::parse($request->tanggal . ' ' . $request->jam_masuk);
 
-            // Jika jam input LEBIH BESAR (gt) dari batas toleransi (21:15), maka Terlambat
             if ($jamInputKaryawan->gt($batasTerlambat)) {
                 $data['status'] = 'Hadir (Terlambat)';
             } else {
@@ -85,11 +98,15 @@ class KehadiranController extends Controller
 
     public function update(Request $request, $id)
     {
+        // --- VALIDASI IP ---
+        if (!$this->isIpAllowed($request->ip())) {
+            return back()->with('error', 'Akses ditolak. Anda harus terhubung ke jaringan WiFi Kantor untuk mengubah data.');
+        }
+
         $kehadiran = Kehadiran::findOrFail($id);
         $status = $request->status;
         $currentIp = $request->ip();
 
-        // --- LOGIKA TOLERANSI 15 MENIT SAAT UPDATE ---
         $shift = Shift::find($kehadiran->shift_id);
         if ($shift && in_array($status, ['Hadir', 'Hadir (Terlambat)', 'hadir'])) {
             $jamMasukShift = Carbon::parse($kehadiran->tanggal . ' ' . $shift->jam_masuk);

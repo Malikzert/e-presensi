@@ -46,7 +46,7 @@ class UserKehadiranController extends Controller
         
         // --- KONFIGURASI IP ---
         // Ganti '114.125.xx.xx' dengan IP Publik Wifi RS yang Anda dapatkan dari Google
-        $allowedIps = ['127.0.0.1', '::1', '192.168.1.1', '114.125.xx.xx']; 
+        $allowedIps = ['127.0.0.1', '192.168.1.1', '114.125.xx.xx']; 
         $isLocalWifi = in_array($currentIp, $allowedIps);
 
         $semuaJadwal = Jadwal::where('karyawan_id', $user->id)

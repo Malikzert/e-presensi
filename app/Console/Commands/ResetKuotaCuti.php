@@ -7,15 +7,12 @@ use App\Models\Karyawan;
 
 class ResetKuotaCuti extends Command
 {
-    // Nama perintah yang akan dipanggil
     protected $signature = 'cuti:reset';
 
-    // Deskripsi perintah
     protected $description = 'Reset kuota cuti tahunan semua karyawan menjadi 15 hari';
 
     public function handle()
     {
-        // Update semua Karyawan yang bukan admin
         Karyawan::where('is_admin', false)->update(['kuota_cuti' => 15]);
 
         $this->info('Kuota cuti berhasil direset menjadi 15 hari untuk semua karyawan.');

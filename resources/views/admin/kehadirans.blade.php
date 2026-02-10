@@ -32,7 +32,34 @@
         maxRadius: 100000, 
         isOutOfRange: true,
         gpsLoaded: false,
+        userIp: '',
+        allowedIps: ['127.0.0.1', '192.168.1.1'], // Sesuaikan dengan IP Kantor Anda
+        isIpValid: false,
 
+        async checkIp() {
+        try {
+            // Cek apakah sedang di localhost
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            
+            const response = await fetch('https://api.ipify.org?format=json');
+            const data = await response.json();
+            this.userIp = data.ip;
+
+            // Jika di localhost, otomatis anggap valid untuk keperluan testing
+            // Jika tidak, cek apakah IP publik ada di daftar allowedIps
+            if (isLocalhost) {
+                this.isIpValid = true;
+            } else {
+                this.isIpValid = this.allowedIps.includes(this.userIp);
+            }
+        } catch (error) {
+            console.error('Gagal mengambil IP:', error);
+            // Jika internet mati saat testing lokal, tetap izinkan jika di localhost
+            if (window.location.hostname === 'localhost') {
+                this.isIpValid = true;
+            }
+        }
+    },
         initMap(type = 'add') {
             this.gpsLoaded = false;
             setTimeout(() => {
@@ -139,7 +166,7 @@
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama karyawan..." class="border-emerald-200 rounded-xl text-sm w-64 focus:ring-emerald-500">
                         <input type="date" name="date" value="{{ request('date') }}" class="border-emerald-200 rounded-xl text-sm focus:ring-emerald-500">
                         <button type="submit" class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-xl text-[10px] font-black hover:bg-emerald-200 transition-all uppercase">Filter</button>
-                        <button type="button" @click="openAdd = true; initMap('add');" class="bg-white border border-emerald-200 text-emerald-700 px-6 py-2 rounded-xl text-xs font-black shadow-sm hover:bg-emerald-50 transition-all">
+                        <button type="button" @click="openAdd = true; initMap('add'); checkIp();" class="bg-white border border-emerald-200 text-emerald-700 px-6 py-2 rounded-xl text-xs font-black shadow-sm hover:bg-emerald-50 transition-all">
                             + TAMBAH MANUAL
                         </button>
                     </div>
@@ -242,6 +269,13 @@
         <div x-show="openAdd" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" x-cloak>
             <div class="bg-white rounded-[35px] w-full max-w-md p-8 shadow-2xl max-h-[90vh] overflow-y-auto border border-emerald-100">
                 <h3 class="font-black text-emerald-900 uppercase text-xs tracking-widest mb-6 text-center">Tambah Kehadiran Manual</h3>
+                <template x-if="userIp && !isIpValid">
+                    <div class="mb-4 p-3 bg-rose-50 border border-rose-100 rounded-2xl">
+                        <p class="text-[10px] text-rose-600 font-bold uppercase text-center">
+                            Akses Ditolak! IP Anda (<span x-text="userIp"></span>) tidak terdaftar dalam jaringan kantor.
+                        </p>
+                    </div>
+                </template>
                 <div class="mb-4">
                     <label class="block text-[10px] font-black uppercase text-emerald-700 mb-2 ml-2">Verifikasi Lokasi GPS</label>
                     <div id="map-container" class="rounded-2xl border border-emerald-100 bg-gray-50"></div>
@@ -297,6 +331,7 @@
                         </div>
                     </div>
                     <div class="mt-8 flex gap-3">
+                        
                         <button type="button" @click="openAdd = false" class="flex-1 py-4 text-xs font-black uppercase text-gray-400">Batal</button>
                         <button type="submit" 
                                 :disabled="isOutOfRange || !gpsLoaded" 

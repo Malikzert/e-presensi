@@ -21,7 +21,7 @@ class KehadiranExport implements FromCollection, WithHeadings, WithMapping, Shou
     {
         return Kehadiran::with('Karyawan')
             ->whereMonth('tanggal', now()->month)
-            ->orderBy('tanggal', 'asc') // Tambahkan urutan agar rapi
+            ->orderBy('tanggal', 'asc') 
             ->get();
     }
 
@@ -48,7 +48,7 @@ class KehadiranExport implements FromCollection, WithHeadings, WithMapping, Shou
     {
         return [
             $kehadiran->Karyawan->name ?? 'N/A',
-            $kehadiran->Karyawan->nopeg ?? '-', // Sesuaikan jika kolomnya nopeg atau nik
+            $kehadiran->Karyawan->nopeg ?? '-', 
             \Carbon\Carbon::parse($kehadiran->tanggal)->format('d-m-Y'),
             $kehadiran->jam_masuk ?? '--:--',
             $kehadiran->jam_pulang ?? '--:--',
@@ -63,12 +63,12 @@ class KehadiranExport implements FromCollection, WithHeadings, WithMapping, Shou
     public function styles(Worksheet $sheet)
     {
         return [
-            // Style untuk baris nomor 1 (Header)
+
             1 => [
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'fill' => [
                     'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '059669'] // Warna Emerald-600 (sesuai tema UI Anda)
+                    'startColor' => ['rgb' => '059669'] 
                 ],
             ],
         ];
@@ -81,9 +81,7 @@ class KehadiranExport implements FromCollection, WithHeadings, WithMapping, Shou
     {
         return [
             AfterSheet::class => function(AfterSheet $event) {
-                $cellRange = 'A1:G' . ($event->sheet->getHighestRow()); // Range kolom A sampai G
-                
-                // Set alignment center untuk semua data kecuali Nama
+                $cellRange = 'A1:G' . ($event->sheet->getHighestRow()); 
                 $event->sheet->getDelegate()->getStyle('B1:G1000')
                     ->getAlignment()
                     ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
