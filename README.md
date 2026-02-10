@@ -1,4 +1,3 @@
-
 <p align="center"><a href="https://github.com/Malikzert/e-presensi" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
@@ -9,23 +8,45 @@
 
 ## Tentang E-Presensi
 
-**E-Presensi** adalah sistem manajemen absensi berbasis web yang dibangun menggunakan framework [Laravel](https://laravel.com). Proyek ini dirancang untuk memudahkan pencatatan kehadiran secara digital, efisien, dan terorganisir.
+**E-Presensi** adalah sistem manajemen absensi berbasis web yang dibangun menggunakan framework **Laravel**. Proyek ini dirancang untuk memudahkan pencatatan kehadiran secara digital menggunakan fitur lokasi (Maps) dan notifikasi email.
 
-Sistem ini mencakup fitur-fitur utama seperti:
-- Manajemen data karyawan/siswa.
-- Pencatatan kehadiran (Presensi).
-- Dashboard pemantauan kehadiran.
-- Laporan absensi yang mudah dikelola.
+---
 
-## Fitur Utama
+## 🛠 Tech Stack & Tools
 
-- **Pencatatan Real-time**: Memungkinkan user untuk melakukan absensi dengan cepat.
-- **Keamanan Data**: Menggunakan sistem autentikasi bawaan Laravel yang robust.
-- **Antarmuka Responsif**: Nyaman diakses baik melalui perangkat desktop maupun mobile.
+### Core Framework & Language
+<p align="left">
+  <img src="https://img.shields.io/badge/Laravel-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" />
+  <img src="https://img.shields.io/badge/PHP-777BB4?style=for-the-badge&logo=php&logoColor=white" />
+  <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
+</p>
 
-## Cara Instalasi Lokal
+### Service & API Integration
+<p align="left">
+  <img src="https://img.shields.io/badge/Google_Maps_API-4285F4?style=for-the-badge&logo=googlemaps&logoColor=white" />
+  <img src="https://img.shields.io/badge/Gmail_SMTP-D14836?style=for-the-badge&logo=gmail&logoColor=white" />
+  <img src="https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white" />
+</p>
 
-Jika Anda ingin menjalankan proyek ini di komputer lokal, ikuti langkah-langkah berikut:
+### Development Tools
+<p align="left">
+  <img src="https://img.shields.io/badge/Visual_Studio_Code-007ACC?style=for-the-badge&logo=visual-studio-code&logoColor=white" />
+  <img src="https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white" />
+  <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" />
+  <img src="https://img.shields.io/badge/Composer-885630?style=for-the-badge&logo=composer&logoColor=white" />
+  <img src="https://img.shields.io/badge/NPM-CB3837?style=for-the-badge&logo=npm&logoColor=white" />
+</p>
+
+---
+
+## ✨ Fitur Utama
+
+- **Pencatatan Real-time**: Absensi cepat dengan validasi waktu server.
+- **Geolocation (Google Maps)**: Memastikan pengguna melakukan presensi di lokasi yang ditentukan.
+- **Email Notification**: Notifikasi otomatis via Gmail SMTP saat berhasil presensi.
+- **Antarmuka Responsif**: Nyaman diakses melalui smartphone maupun laptop.
+
+## 🚀 Cara Instalasi Lokal
 
 1. **Clone repository**:
    ```bash
@@ -34,43 +55,31 @@ Jika Anda ingin menjalankan proyek ini di komputer lokal, ikuti langkah-langkah 
 
 ```
 
-2. **Instal dependensi PHP**:
+2. **Instal dependensi**:
 ```bash
 composer install
-
-```
-
-
-3. **Instal dependensi JavaScript**:
-```bash
 npm install && npm run dev
 
 ```
 
 
-4. **Konfigurasi Environment**:
-Salin file `.env.example` menjadi `.env` dan sesuaikan pengaturan database Anda.
+3. **Konfigurasi Environment**:
+Salin `.env.example` menjadi `.env` dan masukkan kredensial Database, Google Maps API Key, dan SMTP Email Anda.
 ```bash
 cp .env.example .env
 
 ```
 
 
-5. **Generate Application Key**:
+4. **Persiapan Database**:
 ```bash
 php artisan key:generate
-
-```
-
-
-6. **Migrasi Database**:
-```bash
 php artisan migrate
 
 ```
 
 
-7. **Jalankan Server**:
+5. **Jalankan Aplikasi**:
 ```bash
 php artisan serve
 
@@ -78,18 +87,11 @@ php artisan serve
 
 
 
-## Lisensi
+## 📄 Lisensi
 
-Aplikasi ini bersifat open-source dan berada di bawah lisensi [MIT](https://opensource.org/licenses/MIT).
+Aplikasi ini berada di bawah lisensi [MIT](https://opensource.org/licenses/MIT).
 
 ```
-
----
-
-### Sedikit Tips dari Saya:
-* **Badge:** Saya menambahkan beberapa *badge* dinamis di bagian atas (seperti bahasa pemrograman utama dan status commit terakhir) agar profil GitHub kamu terlihat lebih "hidup".
-* **Panduan Instalasi:** Saya menyertakan instruksi standar Laravel (`composer install`, `migrate`, dll.) karena biasanya orang yang melihat repo kamu akan mencari tahu cara menjalankannya.
-
-**Apakah ada fitur spesifik di proyek e-presensi kamu yang ingin ditonjolkan?** Saya bisa bantu tambahkan detailnya ke dalam deskripsi fitur.
+**Apakah ada logo library khusus (seperti Bootstrap atau Tailwind) yang ingin kamu masukkan juga?** Saya bisa tambahkan barisnya!
 
 ```
